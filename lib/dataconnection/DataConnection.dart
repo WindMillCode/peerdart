@@ -33,7 +33,7 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
   String get type => ConnectionType.Data.value;
 
   DataConnection(String peerId, Peer provider, dynamic options)
-      : reliable = options['reliable'] ?? false,
+      : reliable = options.reliable ?? false,
         super(peerId, provider, options) {
     connectionId = options['connectionId'] ?? '${idPrefix}${randomToken()}';
     label = options['label'] ?? connectionId;
