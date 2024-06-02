@@ -4,7 +4,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:peerdart/peer.dart';
 import 'package:peerdart/servermessage.dart';
 
-import 'peerError.dart';
+import 'peer_error.dart';
 
 abstract class BaseConnectionEvents<ErrorType extends String>
     extends EventsWithError<ErrorType> {
@@ -15,7 +15,7 @@ abstract class BaseConnectionEvents<ErrorType extends String>
 }
 
 abstract class BaseConnection<SubClassEvents extends EventsWithError<ErrorType>,
-        ErrorType extends String >
+        ErrorType extends String>
     extends EventEmitterWithError<ErrorType, SubClassEvents> {
   BaseConnection(this.peer, this.provider, this.options) {
     metadata = options.metadata;

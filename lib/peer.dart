@@ -1,19 +1,19 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:peerdart/baseconnection.dart';
-import 'package:peerdart/dataconnection/BufferedConnection/BinaryPack.dart';
-import 'package:peerdart/dataconnection/BufferedConnection/Json.dart';
-import 'package:peerdart/dataconnection/BufferedConnection/Raw.dart';
-import 'package:peerdart/mediaconnection.dart';
-import 'package:peerdart/optionInterfaces.dart';
-import 'package:peerdart/peerError.dart';
+import 'package:peerdart/data_connection/buffered_connection/binary_pack.dart';
+import 'package:peerdart/data_connection/buffered_connection/json.dart';
+import 'package:peerdart/data_connection/buffered_connection/raw.dart';
+import 'package:peerdart/media_connection.dart';
+import 'package:peerdart/option_interfaces.dart';
+import 'package:peerdart/peer_error.dart';
 import 'package:peerdart/util.dart';
 import 'package:peerdart/logger.dart';
 import 'package:peerdart/socket.dart';
-import 'package:peerdart/dataconnection/dataconnection.dart';
+import 'package:peerdart/data_connection/data_connection.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/servermessage.dart';
 import 'package:peerdart/api.dart';
-import 'package:peerdart/utils/randomToken.dart';
+import 'package:peerdart/utils/random_token.dart';
 
 class PeerOptions implements PeerJSOption {
   // LogLevel
@@ -99,14 +99,21 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       String,
       DataConnection Function(
           String peerId, Peer provider, dynamic options)> _serializers = {
-    'raw': (peerId, provider, options) => Raw(peerId, provider, options),
-    'json': (peerId, provider, options) => Json(peerId, provider, options),
-    'binary': (peerId, provider, options) =>
-        BinaryPack(peerId, provider, options),
-    'binary-utf8': (peerId, provider, options) =>
-        BinaryPack(peerId, provider, options),
-    'default': (peerId, provider, options) =>
-        BinaryPack(peerId, provider, options),
+    'raw': (String peerId, Peer provider, dynamic options) {
+      return Raw(peerId, provider, options);
+    },
+    'json': (String peerId, Peer provider, dynamic options) {
+      return Json(peerId, provider, options);
+    },
+    'binary': (String peerId, Peer provider, dynamic options) {
+      return BinaryPack(peerId, provider, options);
+    },
+    'binary-utf8': (String peerId, Peer provider, dynamic options) {
+      return BinaryPack(peerId, provider, options);
+    },
+    'default': (peerId, provider, options) {
+      return BinaryPack(peerId, provider, options);
+    }
   };
   final PeerOptions _options;
   final API _api;
@@ -227,7 +234,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       if (payload['type'] == ConnectionType.Media.value) {
         final mediaConnection = MediaConnection(peerId, this, {
           'connectionId': connectionId,
-          '_payload': payload,
+          'payload': payload,
           'metadata': payload['metadata'],
         });
         connection = mediaConnection;
@@ -239,7 +246,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
           this,
           {
             'connectionId': connectionId,
-            '_payload': payload,
+            'payload': payload,
             'metadata': payload['metadata'],
             'label': payload['label'],
             'serialization': payload['serialization'],

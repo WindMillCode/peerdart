@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:peerdart/dataconnection/BufferedConnection/binaryPackChunker.dart';
+import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
 import 'supports.dart';
 
 class Util extends BinaryPackChunker {

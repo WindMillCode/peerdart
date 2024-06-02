@@ -1,6 +1,6 @@
 import 'package:peerdart/logger.dart';
-import 'package:peerdart/mediaconnection.dart';
-import 'package:peerdart/dataconnection/dataconnection.dart';
+import 'package:peerdart/media_connection.dart';
+import 'package:peerdart/data_connection/data_connection.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/baseconnection.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -301,8 +301,6 @@ class Negotiator<Events extends ValidEventTypes,
   void _addTracksToConnection(
       MediaStream stream, RTCPeerConnection peerConnection) {
     logger.log('add tracks from stream ${stream.id} to peer connection');
-
-
 
     stream.getTracks().forEach((track) {
       peerConnection.addTrack(track, stream);

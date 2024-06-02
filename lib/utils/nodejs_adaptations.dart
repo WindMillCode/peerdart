@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/peerError.dart';
+import 'package:peerdart/peer_error.dart';
 
 class TextEncoderCommon {
   final String encoding = 'utf-8';
@@ -36,12 +36,12 @@ class TextEncoderEncodeIntoResult {
   TextEncoderEncodeIntoResult({required this.read, required this.written});
 }
 
-
 class SubClassEvents<ErrorType> extends EventsWithError<ErrorType> {
   final RTCPeerConnection _peerConnection;
 
-  SubClassEvents(this._peerConnection, {required void Function(PeerError<ErrorType>) error})
-    : super(error: error);
+  SubClassEvents(this._peerConnection,
+      {required void Function(PeerError<ErrorType>) error})
+      : super(error: error);
 
   void addEventListener(String event, Function callback) {
     switch (event) {
@@ -97,17 +97,18 @@ class SubClassEvents<ErrorType> extends EventsWithError<ErrorType> {
 
 typedef ValidEventTypes = dynamic;
 
-
 class TextDecoderCommon {
   final String encoding;
   final bool fatal;
   final bool ignoreBOM;
 
-  TextDecoderCommon({this.encoding = 'utf-8', this.fatal = false, this.ignoreBOM = false});
+  TextDecoderCommon(
+      {this.encoding = 'utf-8', this.fatal = false, this.ignoreBOM = false});
 }
 
 class TextDecoder extends TextDecoderCommon {
-  TextDecoder({String encoding = 'utf-8', bool fatal = false, bool ignoreBOM = false})
+  TextDecoder(
+      {String encoding = 'utf-8', bool fatal = false, bool ignoreBOM = false})
       : super(encoding: encoding, fatal: fatal, ignoreBOM: ignoreBOM);
 
   String decode(Uint8List input, {bool stream = false}) {
@@ -119,5 +120,3 @@ class TextDecoder extends TextDecoderCommon {
     }
   }
 }
-
-

@@ -2,6 +2,6 @@ library peerdart;
 
 export 'peer.dart';
 export 'enums.dart';
-export 'optionInterfaces.dart';
-export 'dataconnection/DataConnection.dart';
-export 'mediaconnection.dart';
+export 'option_interfaces.dart';
+export 'data_connection/data_connection.dart';
+export 'media_connection.dart';

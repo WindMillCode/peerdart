@@ -5,7 +5,7 @@ import 'package:peerdart/version.dart';
 
 import 'util.dart';
 import 'logger.dart';
-import 'optionInterfaces.dart';
+import 'option_interfaces.dart';
 import 'package:http/http.dart' as http;
 
 class API {
