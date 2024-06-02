@@ -18,14 +18,14 @@ abstract class BufferedConnection extends DataConnection {
     dataChannel = dc;
     dataChannel?.onMessage = (RTCDataChannelMessage message) {
       if (message.isBinary) {
-        _handleDataMessage(message);
+        handleDataMessage(message);
       } else {
-        _handleDataMessage(message);
+        handleDataMessage(message);
       }
     };
   }
 
-  void _handleDataMessage(RTCDataChannelMessage message) {
+  void handleDataMessage(RTCDataChannelMessage message) {
     super.emit('data', message);
   }
 

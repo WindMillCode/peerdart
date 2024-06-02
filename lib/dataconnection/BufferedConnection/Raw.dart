@@ -1,7 +1,5 @@
 // FileName: raw.dart
 
-import 'dart:typed_data';
-import 'package:events_emitter/events_emitter.dart';
 import 'package:peerdart/dataconnection/BufferedConnection/BufferedConnection.dart';
 import 'package:peerdart/enums.dart';
 

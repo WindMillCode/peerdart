@@ -52,7 +52,7 @@ class API {
             "Peer.";
       }
 
-      throw Exception('Could not get an ID from the server.$pathError');
+      throw Exception('Could not get an ID from the server. $pathError');
     }
   }
 

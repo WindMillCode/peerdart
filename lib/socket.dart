@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 import 'package:events_emitter/events_emitter.dart';
+import 'package:web_socket_channel/io.dart';
 
 import 'logger.dart';
 import 'enums.dart';
 import 'version.dart';
 
-/**
- * An abstraction on top of WebSockets to provide the fastest
- * possible connection for peers.
- */
+/// An abstraction on top of WebSockets to provide the fastest
+/// possible connection for peers.
 class Socket extends EventEmitter {
   bool _disconnected = true;
   String? _id;
   final List<Map<String, dynamic>> _messagesQueue = [];
-  WebSocket? _socket;
+  IOWebSocketChannel? _socket;
   late Timer _wsPingTimer;
   final String _baseUrl;
   final int pingInterval;
@@ -38,39 +36,31 @@ class Socket extends EventEmitter {
       return;
     }
 
-    _socket = WebSocket(wsUrl);
+    _socket = IOWebSocketChannel.connect(wsUrl);
     _disconnected = false;
 
-    _socket!.onMessage.listen((event) {
+    _socket!.stream.listen((message) {
       try {
-        final data = jsonDecode(event.data);
+        final data = jsonDecode(message);
         logger.log('Server message received: $data');
         emit(SocketEventType.Message.value, data);
       } catch (e) {
-        logger.log('Invalid server message ${event.data}');
+        logger.log('Invalid server message $message');
       }
-    });
-
-    _socket!.onClose.listen((event) {
+    }, onDone: () {
       if (_disconnected) {
         return;
       }
 
-      logger.log('Socket closed. $event' );
+      logger.log('Socket closed.');
       _cleanup();
       _disconnected = true;
       emit(SocketEventType.Disconnected.value);
     });
 
-    _socket!.onOpen.listen((event) {
-      if (_disconnected) {
-        return;
-      }
-
-      _sendQueuedMessages();
-      logger.log('Socket open');
-      _scheduleHeartbeat();
-    });
+    _sendQueuedMessages();
+    logger.log('Socket open');
+    _scheduleHeartbeat();
   }
 
 void _scheduleHeartbeat() {
@@ -84,12 +74,12 @@ void _scheduleHeartbeat() {
     }
 
     final message = jsonEncode({'type': ServerMessageType.Heartbeat.value});
-    _socket!.send(message);
+    _socket!.sink.add(message);
     _scheduleHeartbeat();
   }
 
   bool _wsOpen() {
-    return _socket != null && _socket!.readyState == WebSocket.OPEN;
+    return _socket != null;
   }
 
   void _sendQueuedMessages() {
@@ -121,7 +111,7 @@ void _scheduleHeartbeat() {
     }
 
     final message = jsonEncode(data);
-    _socket!.send(message);
+    _socket!.sink.add(message);
   }
 
   void close() {
@@ -134,10 +124,7 @@ void _scheduleHeartbeat() {
   }
 
   void _cleanup() {
-    _socket?.onOpen.listen(null);
-    _socket?.onMessage.listen(null);
-    _socket?.onClose.listen(null);
-    _socket?.close();
+    _socket?.sink.close();
     _socket = null;
     _wsPingTimer.cancel();
   }

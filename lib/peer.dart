@@ -16,7 +16,7 @@ import 'package:peerdart/api.dart';
 
 class PeerOptions implements PeerJSOption {
   // LogLevel
-  late int? debug;
+  late LogLevel? debug;
   late String? host;
   late int? port;
   late String? path;
@@ -33,19 +33,19 @@ class PeerOptions implements PeerJSOption {
           String peerId, Peer provider, dynamic options)>? serializers;
 
   PeerOptions({
-    this.debug,
-    this.host,
-    this.port,
-    this.path,
+    this.debug = LogLevel.All,
+    this.host = "0.peerjs.com",
+    this.port = 443,
+    this.path = "/",
     this.key,
     this.token,
-    this.config,
-    this.secure,
+    dynamic config ,
+    this.secure = true,
     this.pingInterval,
     this.referrerPolicy,
     this.logFunction,
     this.serializers,
-  });
+  }) : config = config ??= util.defaultConfig;
 }
 
 typedef DataConnectionConstructor = DataConnection Function(
@@ -352,7 +352,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
 
   void _abort(PeerErrorType type, dynamic message) {
     logger.error('Aborting!');
-    emitError(type, message);
+    emitError(type.value, message);
     if (_lastServerId == null) {
       destroy();
     } else {

@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:events_emitter/events_emitter.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:peerdart/dataconnection/BufferedConnection/BufferedConnection.dart';
 import 'package:peerdart/enums.dart';
-import 'package:peerdart/logger.dart';
 import 'package:peerdart/util.dart';
 import 'package:peerdart/utils/nodejs_adaptations.dart';
 

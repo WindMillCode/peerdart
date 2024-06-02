@@ -9,7 +9,6 @@ import 'package:peerdart/logger.dart';
 import 'package:peerdart/negotiator.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/peer.dart';
-import 'package:events_emitter/events_emitter.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class MediaConnectionEvents extends EventsWithError<String> {
@@ -23,7 +22,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
   static const String ID_PREFIX = "mc_";
   String label = '';
 
-  late Negotiator<MediaConnectionEvents, MediaConnection> negotiator;
+  Negotiator<MediaConnectionEvents, MediaConnection>? negotiator;
   MediaStream? _localStream;
   MediaStream? _remoteStream;
 
@@ -36,7 +35,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
     negotiator = Negotiator(this);
 
     if (_localStream != null) {
-      negotiator.startConnection({
+      negotiator!.startConnection({
         '_stream': _localStream,
         'originator': true,
       });
@@ -77,10 +76,10 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
     final payload = message.payload;
 
     if (type == ServerMessageType.Answer.value) {
-      await negotiator.handleSDP(type, payload['sdp']);
+      await negotiator!.handleSDP(type, payload['sdp']);
       open = true;
     } else if (type == ServerMessageType.Candidate.value) {
-      await negotiator.handleCandidate(payload['candidate']);
+      await negotiator!.handleCandidate(payload['candidate']);
     } else {
       logger.warn('Unrecognized message type: $type from peer: $peer');
     }
@@ -100,7 +99,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
       this.options.sdpTransform = options.sdpTransform;
     }
 
-    negotiator.startConnection({
+    negotiator!.startConnection({
       ...options.payload,
       '_stream': stream,
     });
@@ -116,8 +115,8 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
   @override
   void close() {
     if (negotiator != null) {
-      negotiator.cleanup();
-      negotiator = null as Negotiator<MediaConnectionEvents, MediaConnection>;
+      negotiator!.cleanup();
+      negotiator = null;
     }
 
     _localStream = null;

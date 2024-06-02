@@ -25,9 +25,8 @@ class BinaryPack extends BufferedConnection {
 
   @override
   void handleDataMessage(RTCDataChannelMessage message) {
-final byteBuffer = message.binary.buffer;
-final deserializedData = unpack(byteBuffer);
-
+    final byteBuffer = message.binary.buffer;
+    final deserializedData = unpack(byteBuffer);
 
     // PeerJS specific message
     final peerData = deserializedData['__peerData'];
@@ -69,7 +68,7 @@ final deserializedData = unpack(byteBuffer);
   }
 
   @override
-  void _send(dynamic data, bool chunked) async {
+  void send(dynamic data, {bool chunked=false}) async {
     final blob = await pack(data);
     if (blob.lengthInBytes > chunker.chunkedMTU) {
       _sendChunks(blob);

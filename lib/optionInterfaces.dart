@@ -1,3 +1,5 @@
+import 'package:peerdart/logger.dart';
+
 enum RTCBundlePolicy {
   balanced,
   maxBundle,
@@ -91,7 +93,7 @@ class PeerJSOption {
   String? token;
   // RTCConfiguration
   dynamic config;
-  int? debug;
+  LogLevel? debug;
   String? referrerPolicy;
 
   PeerJSOption({

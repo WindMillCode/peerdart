@@ -9,7 +9,6 @@ import 'package:peerdart/baseconnection.dart';
 import 'package:peerdart/servermessage.dart';
 import 'package:peerdart/peerError.dart';
 import 'package:peerdart/utils/randomToken.dart';
-import 'package:events_emitter/events_emitter.dart';
 
 // dynmaic of type DataConnectionErrorType & BaseConnectionErrorType
 abstract class DataConnectionEvents<ErrorType extends String>

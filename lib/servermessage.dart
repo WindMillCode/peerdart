@@ -1,5 +1,4 @@
 
-import 'package:peerdart/enums.dart';
 
 class ServerMessage {
   // ServerMessageType
