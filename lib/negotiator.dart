@@ -222,8 +222,8 @@ class Negotiator<Events extends ValidEventTypes,
           logger.log('Failed to setLocalDescription, $err');
         }
       }
-    } catch (err) {
-      provider!.emitError(PeerErrorType.WebRTC.value, err);
+    } catch (err,stack) {
+    provider!.emitError(PeerErrorType.WebRTC.value, err);
       logger.log('Failed to createOffer, $err');
     }
   }

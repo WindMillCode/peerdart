@@ -126,13 +126,19 @@ class PeerConnectOption {
   bool? reliable;
   String? connectionId;
   dynamic payload;
+  Map<String, dynamic> constraints;
+  Function(String sdp)? sdpTransform;
 
   PeerConnectOption(
       {this.label,
       this.metadata,
       this.serialization,
       this.reliable,
-      this.connectionId});
+      this.connectionId,
+      this.payload,
+      this.sdpTransform,
+      Map<String, dynamic>? constraints})
+      : constraints = constraints ?? {};
 }
 
 class CallOption {
