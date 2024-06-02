@@ -210,12 +210,13 @@ class Negotiator<Events extends ValidEventTypes,
           });
         }
 
+        payload["sdp"] = payload["sdp"].toMap();
         provider!.socket.send({
           'type': ServerMessageType.Offer.value,
           'payload': payload,
           'dst': connection.peer,
         });
-      } catch (err) {
+      } catch (err,stack) {
         if (err !=
             'OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer') {
           provider!.emitError(PeerErrorType.WebRTC.value, err);

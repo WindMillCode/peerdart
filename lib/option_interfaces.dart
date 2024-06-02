@@ -138,7 +138,17 @@ class PeerConnectOption {
       this.payload,
       this.sdpTransform,
       Map<String, dynamic>? constraints})
-      : constraints = constraints ?? {};
+      : constraints = constraints ??
+            {
+              "mandatory": {
+                "OfferToReceiveAudio": true,
+                "OfferToReceiveVideo": true
+              },
+              "optional": [
+                {"DtlsSrtpKeyAgreement": true},
+                {"googImprovedWifiBwe": true}
+              ]
+            };
 }
 
 class CallOption {
