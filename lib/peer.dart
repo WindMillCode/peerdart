@@ -40,23 +40,27 @@ class PeerOptions implements PeerJSOption {
     this.path = "/",
     String? key,
     String? token,
-    dynamic config ,
+    dynamic config,
     this.secure = true,
     this.pingInterval,
     String? referrerPolicy,
     this.logFunction,
     Map<
-      String,
-      DataConnection Function(
-          String peerId, Peer provider, dynamic options)>? serializers,
-  }) : debug = debug ?? LogLevel.Disabled,
-  port = port ?? util.CLOUD_PORT,
-  host = host ?? util.CLOUD_HOST,
-  key = key ?? Peer.DEFAULT_KEY,
-  token = token ?? randomToken(),
-  config = config ?? util.defaultConfig,
-  referrerPolicy =  referrerPolicy ?? "strict-origin-when-cross-origin",
-  serializers = serializers ?? <String, DataConnection Function(String peerId, Peer provider, dynamic options)>{};
+            String,
+            DataConnection Function(
+                String peerId, Peer provider, dynamic options)>?
+        serializers,
+  })  : debug = debug ?? LogLevel.Disabled,
+        port = port ?? util.CLOUD_PORT,
+        host = host ?? util.CLOUD_HOST,
+        key = key ?? Peer.DEFAULT_KEY,
+        token = token ?? randomToken(),
+        config = config ?? util.defaultConfig,
+        referrerPolicy = referrerPolicy ?? "strict-origin-when-cross-origin",
+        serializers = serializers ??
+            <String,
+                DataConnection Function(
+                    String peerId, Peer provider, dynamic options)>{};
 }
 
 typedef DataConnectionConstructor = DataConnection Function(
@@ -109,7 +113,6 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
   final Socket _socket;
   Socket get socket => _socket;
 
-
   String? _id;
   String? _lastServerId;
   bool _destroyed = false;
@@ -129,7 +132,6 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
           options?.key ?? DEFAULT_KEY,
           pingInterval: options?.pingInterval ?? 5000,
         ) {
-
     _serializers = {..._serializers, ..._options.serializers};
     _options.host = _options.host == '/' ? 'localhost' : _options.host;
     _options.path = _options.path?.startsWith('/') ?? false
@@ -142,14 +144,30 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     if (_options.logFunction != null) {
       logger.setLogFunction(_options.logFunction!);
     }
+  }
 
+  String? get id => _id;
+  PeerOptions get options => _options;
+  bool get open => _open;
+  bool get destroyed => _destroyed;
+  bool get disconnected => _disconnected;
+  Map<String, List<BaseConnection>> get connections => _connections;
+  bool isInit = false;
+
+  Future<void> init([String? id]) async {
+    if (isInit == true) {
+      return;
+    }
+    isInit = true;
     if (id != null) {
-      _initialize(id);
+      await _initialize(id);
     } else {
-      _api
-          .retrieveId()
-          .then((id) => _initialize(id))
-          .catchError((error) => _abort(PeerErrorType.ServerError, error));
+      try {
+        String id = await _api.retrieveId();
+        await _initialize(id);
+      } catch (error) {
+        _abort(PeerErrorType.ServerError, error);
+      }
     }
 
     _socket.on(
@@ -170,17 +188,9 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     });
   }
 
-  String? get id => _id;
-  PeerOptions get options => _options;
-  bool get open => _open;
-  bool get destroyed => _destroyed;
-  bool get disconnected => _disconnected;
-
-  Map<String, List<BaseConnection>> get connections => _connections;
-
-  void _initialize(String id) {
+  Future<void> _initialize(String id) async {
     _id = id;
-    _socket.start(id, _options.token!);
+    await _socket.start(id, _options.token!);
   }
 
   void _handleMessage(ServerMessage message) {
@@ -203,8 +213,8 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       _cleanupPeer(peerId);
       _connections.remove(peerId);
     } else if (type == ServerMessageType.Expire.value) {
-      emitError(
-          PeerErrorType.PeerUnavailable.value, 'Could not connect to peer $peerId');
+      emitError(PeerErrorType.PeerUnavailable.value,
+          'Could not connect to peer $peerId');
     } else if (type == ServerMessageType.Offer.value) {
       final connectionId = payload['connectionId'];
       var connection = getConnection(peerId, connectionId);
@@ -300,7 +310,8 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     return dataConnection;
   }
 
-  MediaConnection? call(String peer, MediaStream? stream, [CallOption? options]) {
+  MediaConnection? call(String peer, MediaStream? stream,
+      [CallOption? options]) {
     options ??= CallOption();
     if (_disconnected) {
       logger.warn(
@@ -320,7 +331,6 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       ...options.toMap(),
       '_stream': stream,
     });
-
 
     _addConnection(peer, mediaConnection);
     return mediaConnection;
@@ -414,11 +424,11 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     emit('disconnected', currentId);
   }
 
-  void reconnect() {
+  void reconnect() async {
     if (_disconnected && !_destroyed) {
       logger.log('Attempting reconnection to server with ID $_lastServerId');
       _disconnected = false;
-      _initialize(_lastServerId!);
+      await _initialize(_lastServerId!);
     } else if (_destroyed) {
       throw Exception(
           'This peer cannot reconnect to the server. It has already been destroyed.');

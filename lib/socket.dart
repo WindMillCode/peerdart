@@ -27,7 +27,7 @@ class Socket extends EventEmitter {
     this.pingInterval = 5000,
   }) : _baseUrl = '${secure ? 'https://' : 'http://'}$host:$port$path?key=$key';
 
-  void start(String id, String token) async {
+  Future<void> start(String id, String token) async {
     _id = id;
     final version = await getVersion();
     final wsUrl = '$_baseUrl&id=$id&token=$token&version=$version';
