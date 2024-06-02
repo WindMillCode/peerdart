@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:events_emitter/events_emitter.dart';
-import 'package:web_socket_channel/io.dart';
 
 import 'logger.dart';
 import 'enums.dart';
 import 'version.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 /// An abstraction on top of WebSockets to provide the fastest
 /// possible connection for peers.
@@ -13,7 +13,7 @@ class Socket extends EventEmitter {
   bool _disconnected = true;
   String? _id;
   final List<Map<String, dynamic>> _messagesQueue = [];
-  IOWebSocketChannel? _socket;
+  IO.Socket? _socket;
   late Timer _wsPingTimer;
   final String _baseUrl;
   final int pingInterval;
@@ -25,7 +25,7 @@ class Socket extends EventEmitter {
     String path,
     String key, {
     this.pingInterval = 5000,
-  }) : _baseUrl = '${secure ? 'wss://' : 'ws://'}$host:$port$path?key=$key';
+  }) : _baseUrl = '${secure ? 'https://' : 'http://'}$host:$port$path?key=$key';
 
   void start(String id, String token) async {
     _id = id;
@@ -36,10 +36,23 @@ class Socket extends EventEmitter {
       return;
     }
 
-    _socket = IOWebSocketChannel.connect(wsUrl);
+    _socket = IO.io(
+        wsUrl,
+        IO.OptionBuilder()
+            .setTransports(['websocket'])
+            .disableAutoConnect()
+            .build());
     _disconnected = false;
+    logger.log('WebSocket connection established.');
 
-    _socket!.stream.listen((message) {
+    _socket!.on('connect', (_) {
+      logger.log('Socket connected');
+      _disconnected = false;
+      _sendQueuedMessages();
+      _scheduleHeartbeat();
+    });
+
+    _socket!.on('message', (message) {
       try {
         final data = jsonDecode(message);
         logger.log('Server message received: $data');
@@ -47,7 +60,9 @@ class Socket extends EventEmitter {
       } catch (e) {
         logger.log('Invalid server message $message');
       }
-    }, onDone: () {
+    });
+
+    _socket!.on('disconnect', (_) {
       if (_disconnected) {
         return;
       }
@@ -58,14 +73,19 @@ class Socket extends EventEmitter {
       emit(SocketEventType.Disconnected.value);
     });
 
+    _socket!.on('error', (error) {
+      emit(SocketEventType.Error.value, error);
+    });
+
+    _socket!.connect();
     _sendQueuedMessages();
     logger.log('Socket open');
     _scheduleHeartbeat();
   }
 
-void _scheduleHeartbeat() {
-  _wsPingTimer = Timer(Duration(milliseconds: pingInterval), _sendHeartbeat);
-}
+  void _scheduleHeartbeat() {
+    _wsPingTimer = Timer(Duration(milliseconds: pingInterval), _sendHeartbeat);
+  }
 
   void _sendHeartbeat() {
     if (!_wsOpen()) {
@@ -74,7 +94,7 @@ void _scheduleHeartbeat() {
     }
 
     final message = jsonEncode({'type': ServerMessageType.Heartbeat.value});
-    _socket!.sink.add(message);
+    _socket!.emit('message', message);
     _scheduleHeartbeat();
   }
 
@@ -111,7 +131,7 @@ void _scheduleHeartbeat() {
     }
 
     final message = jsonEncode(data);
-    _socket!.sink.add(message);
+    _socket!.emit('message', message);
   }
 
   void close() {
@@ -124,7 +144,10 @@ void _scheduleHeartbeat() {
   }
 
   void _cleanup() {
-    _socket?.sink.close();
+    _socket?.disconnect();
+    _socket?.close();
+    _socket?.dispose();
+    _socket?.destroy();
     _socket = null;
     _wsPingTimer.cancel();
   }

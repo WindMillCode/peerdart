@@ -30,6 +30,7 @@ enum PeerErrorType {
 }
 
 extension PeerErrorTypeExtension on PeerErrorType {
+
   String get value {
     switch (this) {
       case PeerErrorType.BrowserIncompatible:

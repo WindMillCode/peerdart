@@ -44,13 +44,7 @@ class Util extends BinaryPackChunker {
     };
   }
 
-  bool validateId(String id) {
-    return validateId(id);
-  }
 
-  String randomToken() {
-    return randomToken();
-  }
 
   Future<Uint8List> blobToArrayBuffer(Uint8List blob) async {
     return blob;

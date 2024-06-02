@@ -13,6 +13,7 @@ import 'package:peerdart/dataconnection/dataconnection.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/servermessage.dart';
 import 'package:peerdart/api.dart';
+import 'package:peerdart/utils/randomToken.dart';
 
 class PeerOptions implements PeerJSOption {
   // LogLevel
@@ -30,22 +31,32 @@ class PeerOptions implements PeerJSOption {
   late Map<
       String,
       DataConnection Function(
-          String peerId, Peer provider, dynamic options)>? serializers;
+          String peerId, Peer provider, dynamic options)> serializers;
 
   PeerOptions({
-    this.debug = LogLevel.All,
-    this.host = "0.peerjs.com",
-    this.port = 443,
+    LogLevel? debug,
+    String? host,
+    int? port,
     this.path = "/",
-    this.key,
-    this.token,
+    String? key,
+    String? token,
     dynamic config ,
     this.secure = true,
     this.pingInterval,
-    this.referrerPolicy,
+    String? referrerPolicy,
     this.logFunction,
-    this.serializers,
-  }) : config = config ??= util.defaultConfig;
+    Map<
+      String,
+      DataConnection Function(
+          String peerId, Peer provider, dynamic options)>? serializers,
+  }) : debug = debug ?? LogLevel.Disabled,
+  port = port ?? util.CLOUD_PORT,
+  host = host ?? util.CLOUD_HOST,
+  key = key ?? Peer.DEFAULT_KEY,
+  token = token ?? randomToken(),
+  config = config ?? util.defaultConfig,
+  referrerPolicy =  referrerPolicy ?? "strict-origin-when-cross-origin",
+  serializers = serializers ?? <String, DataConnection Function(String peerId, Peer provider, dynamic options)>{};
 }
 
 typedef DataConnectionConstructor = DataConnection Function(
@@ -80,7 +91,7 @@ class PeerEvents<ErrorType extends String> extends EventsWithError<ErrorType> {
 // PeerErrorType
 class Peer extends EventEmitterWithError<String, PeerEvents> {
   static const String DEFAULT_KEY = 'peerjs';
-  final Map<
+  Map<
       String,
       DataConnection Function(
           String peerId, Peer provider, dynamic options)> _serializers = {
@@ -107,7 +118,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
   final Map<String, List<BaseConnection>> _connections = {};
   final Map<String, List<ServerMessage>> _lostMessages = {};
 
-  Peer([String? id, PeerOptions? options])
+  Peer({String? id, PeerOptions? options})
       : _options = options ?? PeerOptions(),
         _api = API(options ?? PeerOptions()),
         _socket = Socket(
@@ -118,6 +129,8 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
           options?.key ?? DEFAULT_KEY,
           pingInterval: options?.pingInterval ?? 5000,
         ) {
+
+    _serializers = {..._serializers, ..._options.serializers};
     _options.host = _options.host == '/' ? 'localhost' : _options.host;
     _options.path = _options.path?.startsWith('/') ?? false
         ? _options.path
@@ -147,7 +160,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
         (error) => _abort(PeerErrorType.SocketError, error));
     _socket.on(SocketEventType.Disconnected.value, (data) {
       if (_disconnected) return;
-      emitError(PeerErrorType.Network, 'Lost connection to server.');
+      emitError(PeerErrorType.Network.value, 'Lost connection to server.');
       disconnect();
     });
     _socket.on(SocketEventType.Close.value, (data) {
@@ -191,7 +204,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       _connections.remove(peerId);
     } else if (type == ServerMessageType.Expire.value) {
       emitError(
-          PeerErrorType.PeerUnavailable, 'Could not connect to peer $peerId');
+          PeerErrorType.PeerUnavailable.value, 'Could not connect to peer $peerId');
     } else if (type == ServerMessageType.Offer.value) {
       final connectionId = payload['connectionId'];
       var connection = getConnection(peerId, connectionId);
@@ -276,7 +289,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     if (_disconnected) {
       logger.warn(
           'You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect.');
-      emitError(PeerErrorType.Disconnected,
+      emitError(PeerErrorType.Disconnected.value,
           'Cannot connect to new Peer after disconnecting from server.');
       return null;
     }
@@ -292,7 +305,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     if (_disconnected) {
       logger.warn(
           'You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect.');
-      emitError(PeerErrorType.Disconnected,
+      emitError(PeerErrorType.Disconnected.value,
           'Cannot connect to new Peer after disconnecting from server.');
       return null;
     }

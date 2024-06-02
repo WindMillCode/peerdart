@@ -10,6 +10,7 @@ import 'package:peerdart/negotiator.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/peer.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:peerdart/utils/randomToken.dart';
 
 class MediaConnectionEvents extends EventsWithError<String> {
   void Function(MediaStream)? stream;
@@ -30,7 +31,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
       : super(peerId, provider, options) {
     _localStream = options['_stream'];
     connectionId =
-        options['connectionId'] ?? '${ID_PREFIX}${util.randomToken()}';
+        options['connectionId'] ?? '$ID_PREFIX${randomToken()}';
 
     negotiator = Negotiator(this);
 
