@@ -1,5 +1,7 @@
 import 'dart:math';
 
 String randomToken() {
-  return DateTime.now().millisecondsSinceEpoch.toRadixString(36) + (Random().nextDouble().toString().substring(2));
+  final random = Random();
+  final token = random.nextDouble().toString().substring(2);
+  return int.parse(token).toRadixString(36);
 }

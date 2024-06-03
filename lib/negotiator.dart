@@ -80,7 +80,6 @@ class Negotiator<Events extends ValidEventTypes,
         'dst': peerId,
       });
     };
-
     peerConnection.onIceConnectionState = (RTCIceConnectionState state) {
       switch (state) {
         case RTCIceConnectionState.RTCIceConnectionStateFailed:
@@ -102,7 +101,7 @@ class Negotiator<Events extends ValidEventTypes,
               'iceConnectionState changed to disconnected on the connection with $peerId');
           break;
         case RTCIceConnectionState.RTCIceConnectionStateCompleted:
-          peerConnection.onIceCandidate = null;
+          peerConnection.onIceCandidate = (iceCandidate) {};
           break;
         default:
           break;
@@ -211,20 +210,24 @@ class Negotiator<Events extends ValidEventTypes,
         }
 
         payload["sdp"] = payload["sdp"].toMap();
+
+        if (payload["metadata"] == null) {
+          payload.remove("metadata");
+        }
         provider!.socket.send({
           'type': ServerMessageType.Offer.value,
           'payload': payload,
           'dst': connection.peer,
         });
-      } catch (err,stack) {
+      } catch (err, stack) {
         if (err !=
             'OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer') {
           provider!.emitError(PeerErrorType.WebRTC.value, err);
           logger.log('Failed to setLocalDescription, $err');
         }
       }
-    } catch (err,stack) {
-    provider!.emitError(PeerErrorType.WebRTC.value, err);
+    } catch (err, stack) {
+      provider!.emitError(PeerErrorType.WebRTC.value, err);
       logger.log('Failed to createOffer, $err');
     }
   }

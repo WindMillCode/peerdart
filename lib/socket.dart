@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import 'package:events_emitter/events_emitter.dart';
 
 import 'logger.dart';
 import 'enums.dart';
 import 'version.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 /// An abstraction on top of WebSockets to provide the fastest
 /// possible connection for peers.
@@ -13,7 +14,7 @@ class Socket extends EventEmitter {
   bool _disconnected = true;
   String? _id;
   final List<Map<String, dynamic>> _messagesQueue = [];
-  IO.Socket? _socket;
+  WebSocketChannel? _socket;
   late Timer _wsPingTimer;
   final String _baseUrl;
   final int pingInterval;
@@ -25,44 +26,34 @@ class Socket extends EventEmitter {
     String path,
     String key, {
     this.pingInterval = 5000,
-  }) : _baseUrl = '${secure ? 'https://' : 'http://'}$host:$port$path?key=$key';
+  }) : _baseUrl = '${secure ? 'wss://' : 'ws://'}$host:$port${path}peerjs?key=$key';
 
   Future<void> start(String id, String token) async {
     _id = id;
     final version = await getVersion();
-    final wsUrl = '$_baseUrl&id=$id&token=$token&version=$version';
+    final wsUrl = '$_baseUrl&id=$id&token=$token';
 
     if (_socket != null || !_disconnected) {
       return;
     }
 
-    _socket = IO.io(
-        wsUrl,
-        IO.OptionBuilder()
-            .setTransports(['websocket'])
-            .disableAutoConnect()
-            .build());
+    var uri = Uri.parse(wsUrl + "&version=$version");
+    _socket = WebSocketChannel.connect(Uri.parse(wsUrl + "&version=$version"),
+        protocols: ["websocket"]);
     _disconnected = false;
     logger.log('WebSocket connection established.');
 
-    _socket!.on('connect', (_) {
-      logger.log('Socket connected');
-      _disconnected = false;
-      _sendQueuedMessages();
-      _scheduleHeartbeat();
-    });
-
-    _socket!.on('message', (message) {
+    _socket!.stream.listen((message) {
       try {
         final data = jsonDecode(message);
         logger.log('Server message received: $data');
         emit(SocketEventType.Message.value, data);
-      } catch (e) {
+      } catch (err, stack) {
         logger.log('Invalid server message $message');
       }
-    });
-
-    _socket!.on('disconnect', (_) {
+    }, onError: (err) {
+      logger.error(err.inner.message);
+    }, onDone: () {
       if (_disconnected) {
         return;
       }
@@ -73,14 +64,20 @@ class Socket extends EventEmitter {
       emit(SocketEventType.Disconnected.value);
     });
 
-    _socket!.on('error', (error) {
-      emit(SocketEventType.Error.value, error);
+    _socket!.sink
+        .addStream(Stream.fromIterable([
+      jsonEncode({'type': 'open'})
+    ]))
+        .then((_) {
+      if (_disconnected) {
+        return;
+      }
+      _sendQueuedMessages();
+      logger.log('Socket open');
+      _scheduleHeartbeat();
+    }).catchError((error) {
+      logger.log('Error opening socket: $error');
     });
-
-    _socket!.connect();
-    _sendQueuedMessages();
-    logger.log('Socket open');
-    _scheduleHeartbeat();
   }
 
   void _scheduleHeartbeat() {
@@ -94,12 +91,12 @@ class Socket extends EventEmitter {
     }
 
     final message = jsonEncode({'type': ServerMessageType.Heartbeat.value});
-    _socket!.emit('message', message);
+    _socket!.sink.add(message);
     _scheduleHeartbeat();
   }
 
   bool _wsOpen() {
-    return _socket != null;
+    return _socket != null && _socket!.closeCode == null;
   }
 
   void _sendQueuedMessages() {
@@ -131,7 +128,7 @@ class Socket extends EventEmitter {
     }
 
     final message = jsonEncode(data);
-    _socket!.emit('message', message);
+    _socket!.sink.add(message);
   }
 
   void close() {
@@ -144,10 +141,7 @@ class Socket extends EventEmitter {
   }
 
   void _cleanup() {
-    _socket?.disconnect();
-    _socket?.close();
-    _socket?.dispose();
-    _socket?.destroy();
+    _socket?.sink.close();
     _socket = null;
     _wsPingTimer.cancel();
   }

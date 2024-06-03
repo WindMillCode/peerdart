@@ -1,4 +1,4 @@
-const String LOG_PREFIX = "PeerJS: ";
+const String LOG_PREFIX = "PeerDart: ";
 
 /*
 Prints log messages depending on the debug level passed in. Defaults to 0.

@@ -172,22 +172,26 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       try {
         String id = await _api.retrieveId();
         await _initialize(id);
-      } catch (error) {
+      } catch (error,stack) {
         _abort(PeerErrorType.ServerError, error);
       }
     }
 
-    _socket.on(
-        SocketEventType.Message.value,
-        (Map data) => _handleMessage(ServerMessage(
-            type: data["type"], payload: data["payload"], src: data["src"])));
+    _socket.on(SocketEventType.Message.value, (Map data) {
+      logger.log(data);
+      _handleMessage(ServerMessage(
+          type: data["type"], payload: data["payload"], src: data["src"]));
+    });
+
     _socket.on(SocketEventType.Error.value,
         (error) => _abort(PeerErrorType.SocketError, error));
+
     _socket.on(SocketEventType.Disconnected.value, (data) {
       if (_disconnected) return;
       emitError(PeerErrorType.Network.value, 'Lost connection to server.');
       disconnect();
     });
+
     _socket.on(SocketEventType.Close.value, (data) {
       if (_disconnected) return;
       _abort(
