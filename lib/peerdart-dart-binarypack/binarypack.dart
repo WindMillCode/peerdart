@@ -2,18 +2,17 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:convert';
 
+import 'package:msgpack_dart/msgpack_dart.dart';
+
 typedef Packable = dynamic;
 typedef Unpackable = dynamic;
 
 ByteBuffer pack(Packable data) {
-  var packer = Packer();
-  packer.pack(data);
-  return packer.getBuffer();
+  return serialize(data).buffer;
 }
 
 Unpackable unpack(Uint8List data) {
-  var unpacker = Unpacker(data);
-  return unpacker.unpack();
+  return deserialize(data);
 }
 
 // Packer and Unpacker classes as shown in your previous implementation

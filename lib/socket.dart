@@ -37,7 +37,6 @@ class Socket extends EventEmitter {
       return;
     }
 
-    var uri = Uri.parse(wsUrl + "&version=$version");
     _socket = WebSocketChannel.connect(Uri.parse(wsUrl + "&version=$version"),
         protocols: ["websocket"]);
     _disconnected = false;
@@ -87,7 +86,7 @@ class Socket extends EventEmitter {
   void _sendHeartbeat() {
     if (!_wsOpen()) {
       logger.log('Cannot send heartbeat, because socket closed');
-      return; 
+      return;
     }
 
     final message = jsonEncode({'type': ServerMessageType.Heartbeat.value});

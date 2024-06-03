@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
 import 'supports.dart';
+import 'package:peerdart/peerdart-dart-binarypack/binarypack.dart'
+    as BinaryPack;
 
 class Util extends BinaryPackChunker {
   void noop() {}
@@ -44,8 +46,6 @@ class Util extends BinaryPackChunker {
     };
   }
 
-
-
   Future<Uint8List> blobToArrayBuffer(Uint8List blob) async {
     return blob;
   }
@@ -63,14 +63,14 @@ class Util extends BinaryPackChunker {
   bool isSecure() {
     return true; // Assume secure in Flutter environment
   }
+
   Future<ByteBuffer> pack(dynamic data) async {
-    return pack(data);
+    return BinaryPack.pack(data);
   }
 
-  T unpack<T>(ByteBuffer data) {
-    return unpack(data);
+  T unpack<T>(Uint8List data) {
+    return BinaryPack.unpack(data);
   }
-
 }
 
 /**
