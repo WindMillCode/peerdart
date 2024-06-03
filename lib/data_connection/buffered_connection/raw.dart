@@ -13,7 +13,7 @@ class Raw extends BufferedConnection {
     super.emit('data', data);
   }
 
-  void _send(dynamic data, bool chunked) {
+  Future<void> privateSend(dynamic data, bool chunked)async {
     bufferedSend(data);
   }
 }

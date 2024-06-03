@@ -31,7 +31,7 @@ class Json extends BufferedConnection {
   }
 
   @override
-  void send(dynamic data, {bool chunked = false}) {
+  Future<void> privateSend(dynamic data, [bool chunked = false]) async {
     final encodedData = encoder.encode(stringify(data));
     if (encodedData.length >= util.chunkedMTU) {
       emitError(DataConnectionErrorType.MessageToBig.value, 'Message too big for JSON channel');

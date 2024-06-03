@@ -27,7 +27,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   void handleDataMessage(RTCDataChannelMessage message) {
     final byteBuffer = message.binary.buffer;
     final deserializedData = unpack(byteBuffer);
-
+  
     // PeerJS specific message
     var peerData = null;
     try {
@@ -72,7 +72,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   @override
-  void send(dynamic data, {bool chunked=false}) async {
+  Future<void> privateSend(dynamic data, bool chunked) async {
     final blob = await pack(data);
     if (blob.lengthInBytes > chunker.chunkedMTU) {
       _sendChunks(blob);
@@ -81,6 +81,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
     bufferedSend(Uint8List.view(blob));
   }
+
 
   void _sendChunks(ByteBuffer blob) {
     final chunks = chunker.chunk(Uint8List.view(blob));

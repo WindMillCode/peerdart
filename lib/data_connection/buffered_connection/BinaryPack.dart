@@ -68,7 +68,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   @override
-  void send(dynamic data, {bool chunked=false}) async {
+  Future<void> privateSend(dynamic data, [bool chunked=false]) async {
     final blob = await pack(data);
     if (blob.lengthInBytes > chunker.chunkedMTU) {
       _sendChunks(blob);

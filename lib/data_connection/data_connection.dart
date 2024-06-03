@@ -42,7 +42,6 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
 
     _negotiator = Negotiator(this);
 
-
     _negotiator!.startConnection(options.payload?.toJson() ??
         {
           'originator': true,
@@ -112,7 +111,7 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
     emit('close');
   }
 
-  Future<void> _send(dynamic data, bool chunked);
+  Future<void> privateSend(dynamic data, bool chunked);
 
   void send(dynamic data, {bool chunked = false}) {
     if (!open) {
@@ -120,7 +119,7 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
           "Connection is not open. You should listen for the `open` event before sending messages.");
       return;
     }
-    _send(data, chunked);
+    privateSend(data, chunked);
   }
 
   @override
@@ -130,9 +129,10 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
     if (message.type == ServerMessageType.Answer.value) {
       await _negotiator?.handleSDP(message.type, payload.sdp);
     } else if (message.type == ServerMessageType.Candidate.value) {
-      await _negotiator?.handleCandidate(
-        RTCIceCandidate( payload.candidate["candidate"],payload.candidate["sdpMid"],payload.candidate["sdpMLineIndex"]
-          ));
+      await _negotiator?.handleCandidate(RTCIceCandidate(
+          payload.candidate["candidate"],
+          payload.candidate["sdpMid"],
+          payload.candidate["sdpMLineIndex"]));
     } else {
       logger
           .warn('Unrecognized message type: ${message.type} from peer: $peer');
