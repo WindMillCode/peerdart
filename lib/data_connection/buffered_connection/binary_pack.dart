@@ -29,7 +29,11 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     final deserializedData = unpack(byteBuffer);
 
     // PeerJS specific message
-    final peerData = deserializedData['__peerData'];
+    var peerData = null;
+    try {
+      peerData = deserializedData['__peerData'];
+    } catch (err) {
+    }
     if (peerData != null) {
       if (peerData['type'] == 'close') {
         close();

@@ -253,13 +253,13 @@ class Negotiator<Events extends ValidEventTypes,
         provider!.socket.send({
           'type': ServerMessageType.Answer.value,
           'payload': {
-            'sdp': answer,
+            'sdp': answer.toMap(),
             'type': connection.type,
             'connectionId': connection.connectionId,
           },
           'dst': connection.peer,
         });
-      } catch (err) {
+      } catch (err,stack) {
         provider!.emitError(PeerErrorType.WebRTC.value, err);
         logger.log('Failed to setLocalDescription, $err');
       }
