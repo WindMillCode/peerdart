@@ -9,10 +9,11 @@ typedef Unpackable = dynamic;
 
 ByteBuffer pack(Packable data) {
   return serialize(data).buffer;
+
 }
 
 Unpackable unpack(Uint8List data) {
-  return deserialize(data);
+   return deserialize(data);
 }
 
 // Packer and Unpacker classes as shown in your previous implementation
@@ -74,7 +75,7 @@ class Unpacker {
   Unpacker(this.dataView)
       : index = 0,
         dataBuffer = dataView.buffer,
-        length = dataView.buffer.lengthInBytes;
+        length = dataView.lengthInBytes;
 
   Unpackable unpack() {
     int type = unpackUint8();
