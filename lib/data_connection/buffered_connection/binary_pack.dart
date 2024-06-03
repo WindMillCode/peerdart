@@ -25,7 +25,6 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
   @override
   void handleDataMessage(RTCDataChannelMessage message) {
-
     final deserializedData = unpack(message.binary);
     // PeerJS specific message
     dynamic peerData;
@@ -36,9 +35,13 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     }
 
     if (peerData != null) {
-      if (peerData['type'] == 'close') {
-        close();
-        return;
+      try {
+        if (peerData['type'] == 'close') {
+          close();
+          return;
+        }
+      } catch (err) {
+        // data or chunk has not finsihed being sent
       }
 
       // Handle chunked data
@@ -49,16 +52,19 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     emit('data', deserializedData);
   }
 
-  void _handleChunk(Map<String, dynamic> data) {
-    final id = data['__peerData']['id'];
-    final totalChunks = data['__peerData']['total'];
-    final chunkNumber = data['__peerData']['number'];
-    final chunkData = data['__peerData']['data'];
+  void _handleChunk(Map<dynamic, dynamic> data) {
+
+    final id = data['__peerData'];
+    final totalChunks = data['total'];
+    final chunkNumber = data['number'];
+    final chunkData = data['data'];
+    logger.log("chunk data ${chunkData.toString()}");
 
     // Initialize storage for chunks if not present
     if (!_chunkedData.containsKey(id)) {
       _chunkedData[id] = ChunkedData(
-        data: List<Uint8List>.filled(totalChunks, Uint8List(0), growable: false),
+        data:
+            List<Uint8List>.filled(totalChunks, Uint8List(0), growable: false),
         count: 0,
         total: totalChunks,
       );
