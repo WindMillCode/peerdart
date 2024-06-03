@@ -87,7 +87,7 @@ class Socket extends EventEmitter {
   void _sendHeartbeat() {
     if (!_wsOpen()) {
       logger.log('Cannot send heartbeat, because socket closed');
-      return;
+      return; 
     }
 
     final message = jsonEncode({'type': ServerMessageType.Heartbeat.value});

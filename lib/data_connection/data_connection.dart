@@ -37,12 +37,13 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
         super(peerId, provider, options) {
     options.reliable = options.reliable;
 
-    connectionId = options.connectionId ?? '${idPrefix}${randomToken()}';
+    connectionId = options.connectionId ?? '$idPrefix${randomToken()}';
     label = options.label ?? connectionId;
 
     _negotiator = Negotiator(this);
 
-    _negotiator!.startConnection(options.payload ??
+
+    _negotiator!.startConnection(options.payload?.toJson() ??
         {
           'originator': true,
           'reliable': reliable,
@@ -127,9 +128,11 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
     final payload = message.payload;
 
     if (message.type == ServerMessageType.Answer.value) {
-      await _negotiator?.handleSDP(message.type, payload['sdp']);
+      await _negotiator?.handleSDP(message.type, payload.sdp);
     } else if (message.type == ServerMessageType.Candidate.value) {
-      await _negotiator?.handleCandidate(payload['candidate']);
+      await _negotiator?.handleCandidate(
+        RTCIceCandidate( payload.candidate["candidate"],payload.candidate["sdpMid"],payload.candidate["sdpMLineIndex"]
+          ));
     } else {
       logger
           .warn('Unrecognized message type: ${message.type} from peer: $peer');

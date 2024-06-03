@@ -1,14 +1,14 @@
-
-
 class ServerMessage {
   // ServerMessageType
   String type;
   dynamic payload;
-  String src;
+  String? src;
+  String? dst;
 
   ServerMessage({
     required this.type,
-    required this.payload,
-    required this.src,
+    this.payload,
+    this.src,
+    this.dst
   });
 }

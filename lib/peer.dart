@@ -172,15 +172,16 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       try {
         String id = await _api.retrieveId();
         await _initialize(id);
-      } catch (error,stack) {
+      } catch (error, stack) {
         _abort(PeerErrorType.ServerError, error);
       }
     }
 
     _socket.on(SocketEventType.Message.value, (Map data) {
-      logger.log(data);
       _handleMessage(ServerMessage(
-          type: data["type"], payload: data["payload"], src: data["src"]));
+          type: data["type"],
+          payload: PeerConnectOption.fromJson(data["payload"] ?? {}),
+          src: data["src"]));
     });
 
     _socket.on(SocketEventType.Error.value,
@@ -206,7 +207,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
 
   void _handleMessage(ServerMessage message) {
     final type = message.type;
-    final payload = message.payload;
+    final payload = message.payload as PeerConnectOption;
     final peerId = message.src;
 
     if (type == ServerMessageType.Open.value) {
@@ -214,54 +215,57 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       _open = true;
       emit('open', id);
     } else if (type == ServerMessageType.Error.value) {
-      _abort(PeerErrorType.ServerError, payload['msg']);
+      _abort(PeerErrorType.ServerError, payload.msg);
     } else if (type == ServerMessageType.IdTaken.value) {
       _abort(PeerErrorType.UnavailableID, 'ID "$id" is taken');
     } else if (type == ServerMessageType.InvalidKey.value) {
       _abort(PeerErrorType.InvalidKey, 'API KEY "${_options.key}" is invalid');
     } else if (type == ServerMessageType.Leave.value) {
       logger.log('Received leave message from $peerId');
-      _cleanupPeer(peerId);
+      _cleanupPeer(peerId!);
       _connections.remove(peerId);
     } else if (type == ServerMessageType.Expire.value) {
       emitError(PeerErrorType.PeerUnavailable.value,
           'Could not connect to peer $peerId');
     } else if (type == ServerMessageType.Offer.value) {
-      final connectionId = payload['connectionId'];
-      var connection = getConnection(peerId, connectionId);
+      final connectionId = payload.connectionId;
+      var connection = getConnection(peerId!, connectionId!);
 
       if (connection != null) {
         connection.close();
         logger.warn('Offer received for existing Connection ID:$connectionId');
       }
 
-      if (payload['type'] == ConnectionType.Media.value) {
-        final mediaConnection = MediaConnection(peerId, this, {
-          'connectionId': connectionId,
-          'payload': payload,
-          'metadata': payload['metadata'],
-        });
+      if (payload.type == ConnectionType.Media.value) {
+        final mediaConnection = MediaConnection(
+            peerId,
+            this,
+            PeerConnectOption.fromJson({
+              'connectionId': connectionId,
+              'payload': payload,
+              'metadata': payload.metadata,
+            }));
         connection = mediaConnection;
         _addConnection(peerId, connection);
         emit('call', mediaConnection);
-      } else if (payload['type'] == ConnectionType.Data.value) {
-        final dataConnection = _serializers[payload['serialization']]!(
+      } else if (payload.type == ConnectionType.Data.value) {
+        final dataConnection = _serializers[payload.serialization]!(
           peerId,
           this,
-          {
+          PeerConnectOption.fromJson({
             'connectionId': connectionId,
             'payload': payload,
-            'metadata': payload['metadata'],
-            'label': payload['label'],
-            'serialization': payload['serialization'],
-            'reliable': payload['reliable'],
-          },
+            'metadata': payload.metadata,
+            'label': payload.label,
+            'serialization': payload.serialization,
+            'reliable': payload.reliable,
+          }),
         );
         connection = dataConnection;
         _addConnection(peerId, connection);
         emit('connection', dataConnection);
       } else {
-        logger.warn('Received malformed connection type:${payload['type']}');
+        logger.warn('Received malformed connection type:${payload.type}');
         return;
       }
 
@@ -276,8 +280,8 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
         return;
       }
 
-      final connectionId = payload['connectionId'];
-      final connection = getConnection(peerId, connectionId);
+      final connectionId = payload.connectionId!;
+      final connection = getConnection(peerId!, connectionId);
 
       if (connection != null && connection.peerConnection != null) {
         connection.handleMessage(message);

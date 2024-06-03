@@ -1,4 +1,8 @@
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:peerdart/logger.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'option_interfaces.g.dart';
 
 enum RTCBundlePolicy {
   balanced,
@@ -109,6 +113,7 @@ class PeerJSOption {
   });
 }
 
+@JsonSerializable()
 class PeerConnectOption {
   /// A unique label by which you want to identify this data connection.
   /// If left unspecified, a label will be generated at random.
@@ -127,7 +132,12 @@ class PeerConnectOption {
   String? connectionId;
   dynamic payload;
   Map<String, dynamic> constraints;
+  @JsonKey(includeFromJson: false, includeToJson: false)
   Function(String sdp)? sdpTransform;
+  Map<String, String> sdp;
+  String? type;
+  dynamic msg;
+  Map? candidate;
 
   PeerConnectOption(
       {this.label,
@@ -137,8 +147,13 @@ class PeerConnectOption {
       this.connectionId,
       this.payload,
       this.sdpTransform,
-      Map<String, dynamic>? constraints})
-      : constraints = constraints ??
+      Map<String, String>? sdp,
+      Map<String, dynamic>? constraints,
+      this.type,
+      this.msg,
+      this.candidate})
+      : sdp = sdp ?? {},
+        constraints = constraints ??
             {
               "mandatory": {
                 "OfferToReceiveAudio": true,
@@ -149,6 +164,10 @@ class PeerConnectOption {
                 {"googImprovedWifiBwe": true}
               ]
             };
+
+  factory PeerConnectOption.fromJson(Map<String, dynamic> json) =>
+      _$PeerConnectOptionFromJson(json);
+  Map<String, dynamic> toJson() => _$PeerConnectOptionToJson(this);
 }
 
 class CallOption {

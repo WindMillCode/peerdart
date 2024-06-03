@@ -30,7 +30,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
   MediaConnection(String peerId, Peer provider, dynamic options)
       : super(peerId, provider, options) {
     _localStream = options['_stream'];
-    connectionId = options['connectionId'] ?? '$ID_PREFIX${randomToken()}';
+    connectionId = options.connectionId ?? '$ID_PREFIX${randomToken()}';
 
     negotiator = Negotiator(this);
 
@@ -76,10 +76,10 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
     final payload = message.payload;
 
     if (type == ServerMessageType.Answer.value) {
-      await negotiator!.handleSDP(type, payload['sdp']);
+      await negotiator!.handleSDP(type, payload.sdp);
       open = true;
     } else if (type == ServerMessageType.Candidate.value) {
-      await negotiator!.handleCandidate(payload['candidate']);
+      await negotiator!.handleCandidate(payload.candidate);
     } else {
       logger.warn('Unrecognized message type: $type from peer: $peer');
     }
@@ -100,7 +100,7 @@ class MediaConnection extends BaseConnection<MediaConnectionEvents, String> {
     }
 
     negotiator!.startConnection({
-      ...options.payload,
+      ...options.payload.toMap(),
       '_stream': stream,
     });
 

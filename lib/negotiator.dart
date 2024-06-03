@@ -25,7 +25,7 @@ class Negotiator<Events extends ValidEventTypes,
     }
 
     // What do we need to do now?
-    if (options['originator']) {
+    if (options?['originator'] == true) {
       final dataConnection = connection as DataConnection;
 
       final config = RTCDataChannelInit()
