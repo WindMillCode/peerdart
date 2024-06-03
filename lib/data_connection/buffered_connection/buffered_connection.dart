@@ -17,11 +17,7 @@ abstract class BufferedConnection<ErrorType> extends DataConnection<ErrorType> {
     super.initializeDataChannel(dc);
     dataChannel = dc;
     dataChannel?.onMessage = (RTCDataChannelMessage message) {
-      if (message.isBinary) {
-        handleDataMessage(message);
-      } else {
-        handleDataMessage(message);
-      }
+      handleDataMessage(message);
     };
   }
 
@@ -51,7 +47,8 @@ abstract class BufferedConnection<ErrorType> extends DataConnection<ErrorType> {
     }
 
     try {
-      dataChannel?.send(RTCDataChannelMessage.fromBinary(msg));
+      final message = RTCDataChannelMessage.fromBinary(msg);
+      dataChannel?.send(message);
     } catch (e) {
       logger.error('DC#$connectionId Error when sending: $e');
       _buffering = true;

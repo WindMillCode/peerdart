@@ -1,6 +1,6 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'dart:math';
 
 typedef Packable = dynamic;
 typedef Unpackable = dynamic;
@@ -11,11 +11,12 @@ ByteBuffer pack(Packable data) {
   return packer.getBuffer();
 }
 
-Unpackable unpack(ByteBuffer data) {
+Unpackable unpack(Uint8List data) {
   var unpacker = Unpacker(data);
   return unpacker.unpack();
 }
 
+// Packer and Unpacker classes as shown in your previous implementation
 class BufferBuilder {
   List<int> _pieces;
   List<ByteBuffer> _parts;
@@ -71,10 +72,10 @@ class Unpacker {
   Uint8List dataView;
   int length;
 
-  Unpacker(this.dataBuffer)
+  Unpacker(this.dataView)
       : index = 0,
-        dataView = Uint8List.view(dataBuffer),
-        length = dataBuffer.lengthInBytes;
+        dataBuffer = dataView.buffer,
+        length = dataView.buffer.lengthInBytes;
 
   Unpackable unpack() {
     int type = unpackUint8();

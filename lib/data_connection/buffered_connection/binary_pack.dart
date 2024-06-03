@@ -25,22 +25,23 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
   @override
   void handleDataMessage(RTCDataChannelMessage message) {
-    final byteBuffer = message.binary.buffer;
-    final deserializedData = unpack(byteBuffer);
-  
+
+    final deserializedData = unpack(message.binary);
     // PeerJS specific message
-    var peerData = null;
+    dynamic peerData;
     try {
       peerData = deserializedData['__peerData'];
     } catch (err) {
+      // Ignore errors in extracting peerData
     }
+
     if (peerData != null) {
       if (peerData['type'] == 'close') {
         close();
         return;
       }
 
-      // Chunked data -- piece things back together.
+      // Handle chunked data
       _handleChunk(deserializedData);
       return;
     }
@@ -49,24 +50,33 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   void _handleChunk(Map<String, dynamic> data) {
-    final id = data['__peerData'];
-    final chunkInfo = _chunkedData[id] ??
-        ChunkedData(
-          data: [],
-          count: 0,
-          total: data['total'],
-        );
+    final id = data['__peerData']['id'];
+    final totalChunks = data['__peerData']['total'];
+    final chunkNumber = data['__peerData']['number'];
+    final chunkData = data['__peerData']['data'];
 
-    chunkInfo.data[data['n']] = Uint8List.view(data['data'].buffer);
-    chunkInfo.count++;
-    _chunkedData[id] = chunkInfo;
+    // Initialize storage for chunks if not present
+    if (!_chunkedData.containsKey(id)) {
+      _chunkedData[id] = ChunkedData(
+        data: List<Uint8List>.filled(totalChunks, Uint8List(0), growable: false),
+        count: 0,
+        total: totalChunks,
+      );
+    }
 
-    if (chunkInfo.total == chunkInfo.count) {
-      // Clean up before making the recursive call to `handleDataMessage`.
+    // Store the chunk
+    _chunkedData[id]!.data[chunkNumber] = Uint8List.view(chunkData.buffer);
+    _chunkedData[id]!.count++;
+
+    // Check if all chunks are received
+    if (_chunkedData[id]!.total == _chunkedData[id]!.count) {
+      // Concatenate all chunks to reconstruct the file
+      final completeData = concatArrayBuffers(_chunkedData[id]!.data);
+
+      // Clean up before making the recursive call to handleDataMessage
       _chunkedData.remove(id);
 
-      // We've received all the chunks--time to construct the complete data.
-      final completeData = concatArrayBuffers(chunkInfo.data);
+      // Handle the complete data
       handleDataMessage(RTCDataChannelMessage.fromBinary(completeData));
     }
   }
@@ -75,16 +85,15 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   Future<void> privateSend(dynamic data, bool chunked) async {
     final blob = await pack(data);
     if (blob.lengthInBytes > chunker.chunkedMTU) {
-      _sendChunks(blob);
+      _sendChunks(Uint8List.view(blob));
       return;
     }
 
     bufferedSend(Uint8List.view(blob));
   }
 
-
-  void _sendChunks(ByteBuffer blob) {
-    final chunks = chunker.chunk(Uint8List.view(blob));
+  void _sendChunks(Uint8List blob) {
+    final chunks = chunker.chunk(blob);
     logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
 
     for (final chunk in chunks) {

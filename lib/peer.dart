@@ -159,13 +159,13 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
   bool get destroyed => _destroyed;
   bool get disconnected => _disconnected;
   Map<String, List<BaseConnection>> get connections => _connections;
-  // bool isInit = false;
+  bool isInit = false;
 
   Future<void> init([String? id]) async {
-    // if (isInit == true) {
-    //   return;
-    // }
-    // isInit = true;
+    if (isInit == true) {
+      return;
+    }
+    isInit = true;
     if (id != null) {
       await _initialize(id);
     } else {

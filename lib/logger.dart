@@ -71,9 +71,9 @@ class Logger {
     if (logLevel.index >= LogLevel.All.index) {
       print(copy.join(' '));
     } else if (logLevel.index >= LogLevel.Warnings.index) {
-      print("WARNING ${copy.join(' ')}");
+      print("$LOG_PREFIX WARNING ${copy.join(' ')}");
     } else if (logLevel.index >= LogLevel.Errors.index) {
-      print("ERROR ${copy.join(' ')}");
+      print("$LOG_PREFIX ERROR ${copy.join(' ')}");
     }
   }
 
