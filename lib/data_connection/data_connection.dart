@@ -113,13 +113,13 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
 
   Future<void> privateSend(dynamic data, bool chunked);
 
-  void send(dynamic data, {bool chunked = false}) {
+  Future<void> send(dynamic data, {bool chunked = false}) async {
     if (!open) {
       emitError(DataConnectionErrorType.NotOpenYet.value,
           "Connection is not open. You should listen for the `open` event before sending messages.");
-      return;
+      return Future.value();
     }
-    privateSend(data, chunked);
+    await privateSend(data, chunked);
   }
 
   @override

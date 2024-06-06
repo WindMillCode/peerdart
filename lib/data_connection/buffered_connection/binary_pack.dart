@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:peerdart/data_connection/buffered_connection/buffered_connection.dart';
 import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
+import 'package:peerdart/data_connection/data_connection.dart';
 import 'package:peerdart/enums.dart';
 import 'package:peerdart/logger.dart';
 import 'package:peerdart/peer.dart';
@@ -30,7 +31,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     dynamic peerData;
     try {
       peerData = deserializedData['__peerData'];
-    } catch (err) {
+    } catch (err,stack) {
       // Ignore errors in extracting peerData
     }
 
@@ -40,7 +41,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
           close();
           return;
         }
-      } catch (err) {
+      } catch (err,stack) {
         // data or chunk has not finsihed being sent
       }
 
@@ -53,12 +54,12 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   void _handleChunk(Map<dynamic, dynamic> data) {
-
+    logger.log("chunk data ${data.toString()}");
     final id = data['__peerData'];
     final totalChunks = data['total'];
-    final chunkNumber = data['number'];
+    final chunkNumber = data['n'];
     final chunkData = data['data'];
-    logger.log("chunk data ${chunkData.toString()}");
+
 
     // Initialize storage for chunks if not present
     if (!_chunkedData.containsKey(id)) {
@@ -89,23 +90,30 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
   @override
   Future<void> privateSend(dynamic data, bool chunked) async {
-    final blob = await pack(data);
-    if (blob.lengthInBytes > chunker.chunkedMTU) {
-      _sendChunks(Uint8List.view(blob));
+
+    final blob =  pack(data);
+
+    // cant trust because seralized blob adds overhead
+    // if (blob.lengthInBytes > chunker.chunkedMTU*1.1) {
+    if(!chunked && blob.lengthInBytes > chunker.chunkedMTU){
+      await _sendChunks(Uint8List.view(blob));
       return;
     }
 
     bufferedSend(Uint8List.view(blob));
   }
 
-  void _sendChunks(Uint8List blob) {
+  Future<void> _sendChunks(Uint8List blob) async {
     final chunks = chunker.chunk(blob);
-    logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
+    // logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
 
     for (final chunk in chunks) {
-      send(chunk, chunked: true);
+      // logger.log('Chunk data ${chunk.toString()} ');
+      await send(chunk, chunked: true);
     }
   }
+
+
 }
 
 class ChunkedData {

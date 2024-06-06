@@ -9,11 +9,10 @@ typedef Unpackable = dynamic;
 
 ByteBuffer pack(Packable data) {
   return serialize(data).buffer;
-
 }
 
 Unpackable unpack(Uint8List data) {
-   return deserialize(data);
+  return deserialize(data);
 }
 
 // Packer and Unpacker classes as shown in your previous implementation

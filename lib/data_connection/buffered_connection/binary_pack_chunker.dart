@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 class BinaryPackChunker {
-  final int chunkedMTU = 16300; // The original 60000 bytes setting does not work when sending data from Firefox to Chrome, which is "cut off" after 16384 bytes and delivered individually.
+  // final int chunkedMTU = 16384;
+  final int chunkedMTU = 8192;
+  // final int chunkedMTU = 4096;
 
   // Binary stuff
 

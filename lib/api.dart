@@ -1,4 +1,3 @@
-
 import 'dart:math';
 
 import 'package:peerdart/version.dart';
@@ -25,6 +24,7 @@ class API {
       'ts': '${DateTime.now().millisecondsSinceEpoch}${Random().nextDouble()}',
       'version': await getVersion(),
     });
+    print(updatedUrl);
 
     return await http.get(updatedUrl, headers: {
       'referrerPolicy': _options.referrerPolicy ?? '',
@@ -41,7 +41,7 @@ class API {
       }
 
       return response.body;
-    } catch (err,stack) {
+    } catch (err, stack) {
       logger.error('Error retrieving ID $err');
 
       String pathError = '';
@@ -66,18 +66,14 @@ class API {
           String helpfulError = '';
 
           if (_options.host == util.CLOUD_HOST) {
-            helpfulError =
-                "It looks like you're using the cloud server. You can email " +
-                    "team@peerjs.com to enable peer listing for your API key.";
+            helpfulError = "It looks like you're using the cloud server. You can email " +
+                "team@peerjs.com to enable peer listing for your API key.";
           } else {
             helpfulError =
-                "You need to enable `allow_discovery` on your self-hosted " +
-                    "PeerServer to use this feature.";
+                "You need to enable `allow_discovery` on your self-hosted " + "PeerServer to use this feature.";
           }
 
-          throw Exception(
-              "It doesn't look like you have permission to list peers IDs. " +
-                  helpfulError);
+          throw Exception("It doesn't look like you have permission to list peers IDs. " + helpfulError);
         }
 
         throw Exception('Error. Status:${response.statusCode}');
@@ -85,10 +81,9 @@ class API {
 
       return List<dynamic>.from(response.body as List<dynamic>);
     } catch (error) {
-      logger.error('Error retrieving list p $error' );
+      logger.error('Error retrieving list p $error');
 
-      throw Exception(
-          'Could not get list peers from the server. $error' );
+      throw Exception('Could not get list peers from the server. $error');
     }
   }
 }
