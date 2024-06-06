@@ -15,8 +15,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
   Map<int, ChunkedData> _chunkedData = {};
 
-  BinaryPack(String peerId, Peer provider, dynamic options)
-      : super(peerId, provider, options);
+  BinaryPack(String peerId, Peer provider, dynamic options) : super(peerId, provider, options);
 
   @override
   void close({bool flush = false}) {
@@ -31,7 +30,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     dynamic peerData;
     try {
       peerData = deserializedData['__peerData'];
-    } catch (err,stack) {
+    } catch (err, stack) {
       // Ignore errors in extracting peerData
     }
 
@@ -41,7 +40,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
           close();
           return;
         }
-      } catch (err,stack) {
+      } catch (err, stack) {
         // data or chunk has not finsihed being sent
       }
 
@@ -50,34 +49,37 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
       return;
     }
 
+    if (deserializedData is Map) {
+      print(deserializedData);
+    }
     emit('data', deserializedData);
   }
 
   void _handleChunk(Map<dynamic, dynamic> data) {
-    logger.log("chunk data ${data.toString()}");
+    // logger.log("chunk data ${data.toString()}");
     final id = data['__peerData'];
     final totalChunks = data['total'];
     final chunkNumber = data['n'];
     final chunkData = data['data'];
 
-
     // Initialize storage for chunks if not present
     if (!_chunkedData.containsKey(id)) {
       _chunkedData[id] = ChunkedData(
-        data:
-            List<Uint8List>.filled(totalChunks, Uint8List(0), growable: false),
+        data: List<Uint8List>.generate(totalChunks, (_) => Uint8List(0)),
         count: 0,
         total: totalChunks,
       );
     }
 
     // Store the chunk
-    _chunkedData[id]!.data[chunkNumber] = Uint8List.view(chunkData.buffer);
+    _chunkedData[id]!.data[chunkNumber] = Uint8List.fromList(chunkData);
     _chunkedData[id]!.count++;
 
     // Check if all chunks are received
     if (_chunkedData[id]!.total == _chunkedData[id]!.count) {
       // Concatenate all chunks to reconstruct the file
+      var chunkedDataMap = _chunkedData;
+      var targetChunkData = _chunkedData[id];
       final completeData = concatArrayBuffers(_chunkedData[id]!.data);
 
       // Clean up before making the recursive call to handleDataMessage
@@ -90,12 +92,9 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
 
   @override
   Future<void> privateSend(dynamic data, bool chunked) async {
+    final blob = pack(data);
 
-    final blob =  pack(data);
-
-    // cant trust because seralized blob adds overhead
-    // if (blob.lengthInBytes > chunker.chunkedMTU*1.1) {
-    if(!chunked && blob.lengthInBytes > chunker.chunkedMTU){
+    if (!chunked && blob.lengthInBytes > chunker.chunkedMTU) {
       await _sendChunks(Uint8List.view(blob));
       return;
     }
@@ -112,8 +111,6 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
       await send(chunk, chunked: true);
     }
   }
-
-
 }
 
 class ChunkedData {
