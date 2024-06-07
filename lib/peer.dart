@@ -236,6 +236,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
         logger.warn('Offer received for existing Connection ID:$connectionId');
       }
 
+
       if (payload.type == ConnectionType.Media.value) {
         final mediaConnection = MediaConnection(
             peerId,

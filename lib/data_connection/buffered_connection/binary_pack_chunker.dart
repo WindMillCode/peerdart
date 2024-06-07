@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 class BinaryPackChunker {
   // final int chunkedMTU = 16384;
-  // final int chunkedMTU = 8192;
-  final int chunkedMTU = 4096;
+  int chunkedMTU = 8192;
+  // final int chunkedMTU = 4096;
 
   // Binary stuff
 

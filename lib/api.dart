@@ -24,7 +24,6 @@ class API {
       'ts': '${DateTime.now().millisecondsSinceEpoch}${Random().nextDouble()}',
       'version': await getVersion(),
     });
-    print(updatedUrl);
 
     return await http.get(updatedUrl, headers: {
       'referrerPolicy': _options.referrerPolicy ?? '',

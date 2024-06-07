@@ -49,14 +49,12 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
       return;
     }
 
-    if (deserializedData is Map) {
-      print(deserializedData);
-    }
+
     emit('data', deserializedData);
   }
 
   void _handleChunk(Map<dynamic, dynamic> data) {
-    // logger.log("chunk data ${data.toString()}");
+    logger.log("chunk data ${data.toString()}");
     final id = data['__peerData'];
     final totalChunks = data['total'];
     final chunkNumber = data['n'];
@@ -103,11 +101,12 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   Future<void> _sendChunks(Uint8List blob) async {
+    chunker.chunkedMTU = messageSize;
     final chunks = chunker.chunk(blob);
-    // logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
+    logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
 
     for (final chunk in chunks) {
-      // logger.log('Chunk data ${chunk.toString()} ');
+      logger.log('Chunk data ${chunk.toString()}');
       await send(chunk, chunked: true);
     }
   }

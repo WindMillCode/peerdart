@@ -1,6 +1,9 @@
 // FileName: dataconnection.dart
 
+import 'dart:math';
+
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
 import 'package:peerdart/logger.dart';
 import 'package:peerdart/negotiator.dart';
 import 'package:peerdart/enums.dart';
@@ -11,8 +14,7 @@ import 'package:peerdart/peer_error.dart';
 import 'package:peerdart/utils/random_token.dart';
 
 // dynmaic of type DataConnectionErrorType & BaseConnectionErrorType
-abstract class DataConnectionEvents<ErrorType extends String>
-    extends EventsWithError<ErrorType> {
+abstract class DataConnectionEvents<ErrorType extends String> extends EventsWithError<ErrorType> {
   void Function(dynamic data)? data;
   void Function()? open;
 
@@ -27,6 +29,7 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
   // SerializationType
   abstract final String serialization;
   final bool reliable;
+  int messageSize =BinaryPackChunker().chunkedMTU;
 
   @override
   // ConnectionType
@@ -49,15 +52,47 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
         });
   }
 
+  int parseMaximumSize(RTCSessionDescription? description) {
+    var remoteLines = description?.sdp?.split('\r\n') ?? [];
+
+    int remoteMaximumSize = 0;
+    for (final line in remoteLines) {
+      if (line.startsWith('a=max-message-size:')) {
+        var string = line.substring('a=max-message-size:'.length);
+        remoteMaximumSize = int.parse(string);
+        break;
+      }
+    }
+
+    if (remoteMaximumSize == 0) {
+      logger.log('SENDER: No max message size session description');
+    }
+
+    // 16 kb should be supported on all clients so we can use it
+    // even if no max message is set
+    return max(remoteMaximumSize, BinaryPackChunker().chunkedMTU);
+  }
+
+  Future<void> updateMaximumMessageSize() async {
+    RTCSessionDescription? local = await peerConnection!.getLocalDescription();
+    RTCSessionDescription? remote = await peerConnection!.getRemoteDescription();
+    int localMaximumSize = parseMaximumSize(local);
+    int remoteMaximumSize = parseMaximumSize(remote);
+    messageSize = min(localMaximumSize, remoteMaximumSize);
+
+    logger.log('SENDER: Updated max message size: $messageSize Local: $localMaximumSize Remote: $remoteMaximumSize ');
+  }
+
   @override
   Future<void> initializeDataChannel(RTCDataChannel dc) async {
     dataChannel = dc;
-    dataChannel?.onDataChannelState = (state) {
+    dataChannel?.onDataChannelState = (state) async {
       switch (state) {
         case RTCDataChannelState.RTCDataChannelOpen:
           logger.log('DC#$connectionId dc connection success');
           open = true;
           emit('open');
+          await updateMaximumMessageSize();
           break;
         case RTCDataChannelState.RTCDataChannelClosed:
           logger.log('DC#$connectionId dc closed for: $peer');
@@ -130,12 +165,9 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
       await _negotiator?.handleSDP(message.type, payload.sdp);
     } else if (message.type == ServerMessageType.Candidate.value) {
       await _negotiator?.handleCandidate(RTCIceCandidate(
-          payload.candidate["candidate"],
-          payload.candidate["sdpMid"],
-          payload.candidate["sdpMLineIndex"]));
+          payload.candidate["candidate"], payload.candidate["sdpMid"], payload.candidate["sdpMLineIndex"]));
     } else {
-      logger
-          .warn('Unrecognized message type: ${message.type} from peer: $peer');
+      logger.warn('Unrecognized message type: ${message.type} from peer: $peer');
     }
   }
 }
