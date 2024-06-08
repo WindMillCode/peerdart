@@ -1,4 +1,4 @@
-library peerdart;
+library windmillcode_peerdart;
 
 export 'peer.dart';
 export 'enums.dart';
