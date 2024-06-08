@@ -155,11 +155,15 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     if (id != null) {
       await _initialize(id);
     } else {
-      try {
-        String id = await _api.retrieveId();
-        await _initialize(id);
-      } catch (error, stack) {
-        _abort(PeerErrorType.ServerError, error);
+      if (options.clientType == "websocket") {
+        try {
+          String id = await _api.retrieveId();
+          await _initialize(id);
+        } catch (error, stack) {
+          _abort(PeerErrorType.ServerError, error);
+        }
+      } else {
+        await _initialize();
       }
     }
 
@@ -182,9 +186,14 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     });
   }
 
-  Future<void> _initialize(String id) async {
-    _id = id;
-    await _socket.start(id, _options.token!);
+  Future<void> _initialize([String? id]) async {
+    if (options.clientType == "websocket") {
+      _id = id;
+      await _socket.start(id!, _options.token!);
+    } else {
+      await _socket.start(id, _options.token!);
+      _id = _socket.socketio!.id;
+    }
   }
 
   void _handleMessage(ServerMessage message) {

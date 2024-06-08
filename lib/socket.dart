@@ -15,7 +15,7 @@ class Socket extends EventEmitter {
   String? _id;
   final List<Map<String, dynamic>> _messagesQueue = [];
   WebSocketChannel? _websocket;
-  IO.Socket? _socketio;
+  IO.Socket? socketio;
   late Timer _wsPingTimer;
   final String _baseWebSocketUrl;
   final String _baseSocketioUrl;
@@ -35,22 +35,27 @@ class Socket extends EventEmitter {
         _baseSocketioUrl = '${secure ? 'wss://' : 'ws://'}$host:$port',
         _baseSocketioQueryParams = {'key': key};
 
-  Future<void> start(String id, String token) async {
-    _id = id;
+  Future<void> start(String? id, String token) async {
+    Completer<void> completer = Completer<void>();
+
+    if (clientType == 'websocket') {
+      _id = id;
+    }
     final version = await getVersion();
     final wsUrl = '$_baseWebSocketUrl&id=$id&token=$token';
 
-    if ((_websocket != null || _socketio != null) || !_disconnected) {
+    if ((_websocket != null || socketio != null) || !_disconnected) {
       return;
     }
 
     if (clientType == 'websocket') {
       _websocket = WebSocketChannel.connect(Uri.parse(wsUrl + "&version=$version"), protocols: ["websocket"]);
     } else {
-      _socketio = IO.io(
+      socketio = IO.io(
         _baseSocketioUrl,
         IO.OptionBuilder()
-            .setQuery({..._baseSocketioQueryParams, 'id': id, 'token': token, 'version': version}).build(),
+            .setPath("/peerjs-socketio")
+            .setQuery({..._baseSocketioQueryParams, 'token': token, 'version': version}).build(),
       );
     }
     _disconnected = false;
@@ -89,19 +94,23 @@ class Socket extends EventEmitter {
         _sendQueuedMessages();
         logger.log('Socket open');
         _scheduleHeartbeat();
+        completer.complete();
       }).catchError((error) {
         logger.log('Error opening socket: $error');
+        completer.completeError(error);
       });
     } else {
-      _socketio!.on('connect', (_) {
+      socketio!.on('connect', (_) {
+        _id = socketio!.id;
         if (_disconnected) {
           return;
         }
         _sendQueuedMessages();
         logger.log('Socket open');
+        completer.complete();
       });
 
-      _socketio!.on('message', (data) {
+      socketio!.on('message', (data) {
         try {
           logger.log(
             'Server message received:$data',
@@ -112,11 +121,14 @@ class Socket extends EventEmitter {
         }
       });
 
-      _socketio!.on('error', (err) {
+      socketio!.on('error', (err) {
         logger.error('$err');
+        if (!completer.isCompleted) {
+          completer.completeError(err);
+        }
       });
 
-      _socketio!.on('disconnect', (reason) {
+      socketio!.on('disconnect', (reason) {
         if (_disconnected) {
           return;
         }
@@ -124,8 +136,13 @@ class Socket extends EventEmitter {
         _cleanup();
         _disconnected = true;
         emit(SocketEventType.Disconnected.value);
+        if (!completer.isCompleted) {
+          completer.completeError(reason);
+        }
       });
     }
+
+    return completer.future;
   }
 
   void _scheduleHeartbeat() {
@@ -149,7 +166,7 @@ class Socket extends EventEmitter {
     if (clientType == 'websocket') {
       return _websocket != null && _websocket!.closeCode == null;
     } else {
-      return _socketio != null && _socketio!.connected;
+      return socketio != null && socketio!.connected;
     }
   }
 
@@ -185,7 +202,7 @@ class Socket extends EventEmitter {
     if (clientType == 'websocket') {
       _websocket!.sink.add(message);
     } else {
-      _socketio!.emit('message', message);
+      socketio!.emit('message', message);
     }
   }
 
@@ -203,11 +220,11 @@ class Socket extends EventEmitter {
       _websocket?.sink.close();
       _websocket = null;
     } else {
-      _socketio?.disconnect();
-      _socketio?.close();
-      _socketio?.dispose();
-      _socketio?.destroy();
-      _socketio = null;
+      socketio?.disconnect();
+      socketio?.close();
+      socketio?.dispose();
+      socketio?.destroy();
+      socketio = null;
     }
     _wsPingTimer.cancel();
   }
