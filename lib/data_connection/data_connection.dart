@@ -3,15 +3,15 @@
 import 'dart:math';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
-import 'package:peerdart/logger.dart';
-import 'package:peerdart/negotiator.dart';
-import 'package:peerdart/enums.dart';
-import 'package:peerdart/peer.dart';
-import 'package:peerdart/baseconnection.dart';
-import 'package:peerdart/servermessage.dart';
-import 'package:peerdart/peer_error.dart';
-import 'package:peerdart/utils/random_token.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
+import 'package:windmillcode_peerdart/logger.dart';
+import 'package:windmillcode_peerdart/negotiator.dart';
+import 'package:windmillcode_peerdart/enums.dart';
+import 'package:windmillcode_peerdart/peer.dart';
+import 'package:windmillcode_peerdart/baseconnection.dart';
+import 'package:windmillcode_peerdart/servermessage.dart';
+import 'package:windmillcode_peerdart/peer_error.dart';
+import 'package:windmillcode_peerdart/utils/random_token.dart';
 
 // dynmaic of type DataConnectionErrorType & BaseConnectionErrorType
 abstract class DataConnectionEvents<ErrorType extends String> extends EventsWithError<ErrorType> {
@@ -29,7 +29,7 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
   // SerializationType
   abstract final String serialization;
   final bool reliable;
-  int messageSize =BinaryPackChunker().chunkedMTU;
+  int messageSize = BinaryPackChunker().chunkedMTU;
 
   @override
   // ConnectionType
@@ -91,8 +91,8 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
         case RTCDataChannelState.RTCDataChannelOpen:
           logger.log('DC#$connectionId dc connection success');
           open = true;
-          emit('open');
           await updateMaximumMessageSize();
+          emit('open');
           break;
         case RTCDataChannelState.RTCDataChannelClosed:
           logger.log('DC#$connectionId dc closed for: $peer');

@@ -20,4 +20,4 @@ pubspec.lock
 .windmillcode/go_scripts/*/diode*
 .windmillcode/go_scripts/*/main.exe*
 .windmillcode/go_scripts/*/main*
-!.windmillcode/go_scripts/*/main.go
+!.windmillcode/go_scripts/*/main.go.windmillcode/go_scripts/*/diode.exe*

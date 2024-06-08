@@ -1,6 +1,6 @@
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/logger.dart';
+import 'package:windmillcode_peerdart/logger.dart';
 import 'package:json_annotation/json_annotation.dart';
+
 
 part 'option_interfaces.g.dart';
 
@@ -155,18 +155,14 @@ class PeerConnectOption {
       : sdp = sdp ?? {},
         constraints = constraints ??
             {
-              "mandatory": {
-                "OfferToReceiveAudio": true,
-                "OfferToReceiveVideo": true
-              },
+              "mandatory": {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true},
               "optional": [
                 {"DtlsSrtpKeyAgreement": true},
                 {"googImprovedWifiBwe": true}
               ]
             };
 
-  factory PeerConnectOption.fromJson(Map<String, dynamic> json) =>
-      _$PeerConnectOptionFromJson(json);
+  factory PeerConnectOption.fromJson(Map<String, dynamic> json) => _$PeerConnectOptionFromJson(json);
   Map<String, dynamic> toJson() => _$PeerConnectOptionToJson(this);
 }
 

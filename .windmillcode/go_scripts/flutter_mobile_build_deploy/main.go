@@ -18,6 +18,7 @@ import (
 func main() {
 
 	shared.CDToWorkspaceRoot()
+	shared.SetJavaEnvironment()
 	workspaceRoot, err := os.Getwd()
 	if err != nil {
 		return

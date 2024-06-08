@@ -1,13 +1,12 @@
-import 'package:peerdart/logger.dart';
-import 'package:peerdart/media_connection.dart';
-import 'package:peerdart/data_connection/data_connection.dart';
-import 'package:peerdart/enums.dart';
-import 'package:peerdart/baseconnection.dart';
+import 'package:windmillcode_peerdart/logger.dart';
+import 'package:windmillcode_peerdart/media_connection.dart';
+import 'package:windmillcode_peerdart/data_connection/data_connection.dart';
+import 'package:windmillcode_peerdart/enums.dart';
+import 'package:windmillcode_peerdart/baseconnection.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/utils/nodejs_adaptations.dart';
+import 'package:windmillcode_peerdart/utils/nodejs_adaptations.dart';
 
-class Negotiator<Events extends ValidEventTypes,
-    CT extends BaseConnection<dynamic /*Events */, String>> {
+class Negotiator<Events extends ValidEventTypes, CT extends BaseConnection<dynamic /*Events */, String>> {
   final CT connection;
 
   Negotiator(this.connection);
@@ -19,8 +18,7 @@ class Negotiator<Events extends ValidEventTypes,
     // Set the connection's PC.
     connection.peerConnection = peerConnection;
 
-    if (connection.type == ConnectionType.Media.value &&
-        options['_stream'] != null) {
+    if (connection.type == ConnectionType.Media.value && options['_stream'] != null) {
       _addTracksToConnection(options['_stream'], peerConnection);
     }
 
@@ -28,8 +26,7 @@ class Negotiator<Events extends ValidEventTypes,
     if (options?['originator'] == true) {
       final dataConnection = connection as DataConnection;
 
-      final config = RTCDataChannelInit()
-        ..ordered = options['reliable'] ?? false;
+      final config = RTCDataChannelInit()..ordered = options['reliable'] ?? false;
 
       final dataChannel = await peerConnection.createDataChannel(
         dataConnection.label,
@@ -47,8 +44,7 @@ class Negotiator<Events extends ValidEventTypes,
   Future<RTCPeerConnection> _startPeerConnection() async {
     logger.log('Creating RTCPeerConnection.');
 
-    final peerConnection =
-        await createPeerConnection(connection.provider!.options.config);
+    final peerConnection = await createPeerConnection(connection.provider!.options.config);
 
     _setupListeners(peerConnection);
 
@@ -83,22 +79,18 @@ class Negotiator<Events extends ValidEventTypes,
     peerConnection.onIceConnectionState = (RTCIceConnectionState state) {
       switch (state) {
         case RTCIceConnectionState.RTCIceConnectionStateFailed:
-          logger.log(
-              'iceConnectionState is failed, closing connections to $peerId');
-          connection.emitError(BaseConnectionErrorType.NegotiationFailed.value,
-              'Negotiation of connection to $peerId failed.');
+          logger.log('iceConnectionState is failed, closing connections to $peerId');
+          connection.emitError(
+              BaseConnectionErrorType.NegotiationFailed.value, 'Negotiation of connection to $peerId failed.');
           connection.close();
           break;
         case RTCIceConnectionState.RTCIceConnectionStateClosed:
-          logger.log(
-              'iceConnectionState is closed, closing connections to $peerId');
-          connection.emitError(BaseConnectionErrorType.ConnectionClosed.value,
-              'Connection to $peerId closed.');
+          logger.log('iceConnectionState is closed, closing connections to $peerId');
+          connection.emitError(BaseConnectionErrorType.ConnectionClosed.value, 'Connection to $peerId closed.');
           connection.close();
           break;
         case RTCIceConnectionState.RTCIceConnectionStateDisconnected:
-          logger.log(
-              'iceConnectionState changed to disconnected on the connection with $peerId');
+          logger.log('iceConnectionState changed to disconnected on the connection with $peerId');
           break;
         case RTCIceConnectionState.RTCIceConnectionStateCompleted:
           peerConnection.onIceCandidate = (iceCandidate) {};
@@ -117,8 +109,7 @@ class Negotiator<Events extends ValidEventTypes,
       logger.log('Received data channel');
 
       final dataChannel = event;
-      final connection =
-          provider!.getConnection(peerId, connectionId) as DataConnection;
+      final connection = provider!.getConnection(peerId, connectionId) as DataConnection;
 
       connection.initializeDataChannel(dataChannel);
     };
@@ -156,15 +147,13 @@ class Negotiator<Events extends ValidEventTypes,
     peerConnection.onDataChannel = null;
     peerConnection.onTrack = null;
 
-    final peerConnectionNotClosed = peerConnection.signalingState !=
-        RTCSignalingState.RTCSignalingStateClosed;
+    final peerConnectionNotClosed = peerConnection.signalingState != RTCSignalingState.RTCSignalingStateClosed;
     bool dataChannelNotClosed = false;
 
     final dataChannel = connection.dataChannel;
 
     if (dataChannel != null) {
-      dataChannelNotClosed =
-          dataChannel.state != RTCDataChannelState.RTCDataChannelClosed;
+      dataChannelNotClosed = dataChannel.state != RTCDataChannelState.RTCDataChannelClosed;
     }
 
     if (peerConnectionNotClosed || dataChannelNotClosed) {
@@ -177,13 +166,11 @@ class Negotiator<Events extends ValidEventTypes,
     final provider = connection.provider;
 
     try {
-      final offer =
-          await peerConnection!.createOffer(connection.options.constraints);
+      final offer = await peerConnection!.createOffer(connection.options.constraints);
 
       logger.log('Created offer.');
 
-      if (connection.options.sdpTransform != null &&
-          connection.options.sdpTransform is Function) {
+      if (connection.options.sdpTransform != null && connection.options.sdpTransform is Function) {
         offer.sdp = connection.options.sdpTransform(offer.sdp) ?? offer.sdp;
       }
 
@@ -220,8 +207,7 @@ class Negotiator<Events extends ValidEventTypes,
           'dst': connection.peer,
         });
       } catch (err, stack) {
-        if (err !=
-            'OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer') {
+        if (err != 'OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer') {
           provider!.emitError(PeerErrorType.WebRTC.value, err);
           logger.log('Failed to setLocalDescription, $err');
         }
@@ -240,8 +226,7 @@ class Negotiator<Events extends ValidEventTypes,
       final answer = await peerConnection!.createAnswer();
       logger.log('Created answer.');
 
-      if (connection.options.sdpTransform != null &&
-          connection.options.sdpTransform is Function) {
+      if (connection.options.sdpTransform != null && connection.options.sdpTransform is Function) {
         answer.sdp = connection.options.sdpTransform(answer.sdp) ?? answer.sdp;
       }
 
@@ -259,7 +244,7 @@ class Negotiator<Events extends ValidEventTypes,
           },
           'dst': connection.peer,
         });
-      } catch (err,stack) {
+      } catch (err, stack) {
         provider!.emitError(PeerErrorType.WebRTC.value, err);
         logger.log('Failed to setLocalDescription, $err');
       }
@@ -302,8 +287,7 @@ class Negotiator<Events extends ValidEventTypes,
     }
   }
 
-  void _addTracksToConnection(
-      MediaStream stream, RTCPeerConnection peerConnection) {
+  void _addTracksToConnection(MediaStream stream, RTCPeerConnection peerConnection) {
     logger.log('add tracks from stream ${stream.id} to peer connection');
 
     stream.getTracks().forEach((track) {
@@ -311,10 +295,8 @@ class Negotiator<Events extends ValidEventTypes,
     });
   }
 
-  void _addStreamToMediaConnection(
-      MediaStream stream, MediaConnection mediaConnection) {
-    logger.log(
-        'add stream ${stream.id} to media connection ${mediaConnection.connectionId}');
+  void _addStreamToMediaConnection(MediaStream stream, MediaConnection mediaConnection) {
+    logger.log('add stream ${stream.id} to media connection ${mediaConnection.connectionId}');
 
     mediaConnection.addStream(stream);
   }

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/data_connection/data_connection.dart';
-import 'package:peerdart/logger.dart';
+import 'package:windmillcode_peerdart/data_connection/data_connection.dart';
+import 'package:windmillcode_peerdart/logger.dart';
 
 abstract class BufferedConnection<ErrorType> extends DataConnection<ErrorType> {
   List<Uint8List> _buffer = [];

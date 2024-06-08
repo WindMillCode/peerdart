@@ -1,4 +1,3 @@
-import 'dart:io';
 // import 'package:pubspec/pubspec.dart';
 
 Future<String> getVersion() async {

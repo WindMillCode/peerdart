@@ -1,12 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/data_connection/buffered_connection/buffered_connection.dart';
-import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
-import 'package:peerdart/data_connection/data_connection.dart';
-import 'package:peerdart/enums.dart';
-import 'package:peerdart/logger.dart';
-import 'package:peerdart/peer.dart';
-import 'package:peerdart/peerdart-dart-binarypack/binarypack.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/buffered_connection.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
+import 'package:windmillcode_peerdart/enums.dart';
+import 'package:windmillcode_peerdart/logger.dart';
+import 'package:windmillcode_peerdart/peer.dart';
+import 'package:windmillcode_peerdart/peerdart-dart-binarypack/binarypack.dart';
 
 class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   final chunker = BinaryPackChunker();
@@ -49,12 +48,11 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
       return;
     }
 
-
     emit('data', deserializedData);
   }
 
   void _handleChunk(Map<dynamic, dynamic> data) {
-    logger.log("chunk data ${data.toString()}");
+    logger.chunk("chunk data ${data.toString()}");
     final id = data['__peerData'];
     final totalChunks = data['total'];
     final chunkNumber = data['n'];
@@ -103,10 +101,10 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   Future<void> _sendChunks(Uint8List blob) async {
     chunker.chunkedMTU = messageSize;
     final chunks = chunker.chunk(blob);
-    logger.log('DC#$connectionId Try to send ${chunks.length} chunks...');
+    logger.chunk('DC#$connectionId Try to send ${chunks.length} chunks...');
 
     for (final chunk in chunks) {
-      logger.log('Chunk data ${chunk.toString()}');
+      logger.chunk('chunk data ${chunk.toString()}');
       await send(chunk, chunked: true);
     }
   }

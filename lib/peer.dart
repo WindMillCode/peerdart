@@ -1,19 +1,19 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/baseconnection.dart';
-import 'package:peerdart/data_connection/buffered_connection/binary_pack.dart';
-import 'package:peerdart/data_connection/buffered_connection/json.dart';
-import 'package:peerdart/data_connection/buffered_connection/raw.dart';
-import 'package:peerdart/media_connection.dart';
-import 'package:peerdart/option_interfaces.dart';
-import 'package:peerdart/peer_error.dart';
-import 'package:peerdart/util.dart';
-import 'package:peerdart/logger.dart';
-import 'package:peerdart/socket.dart';
-import 'package:peerdart/data_connection/data_connection.dart';
-import 'package:peerdart/enums.dart';
-import 'package:peerdart/servermessage.dart';
-import 'package:peerdart/api.dart';
-import 'package:peerdart/utils/random_token.dart';
+import 'package:windmillcode_peerdart/baseconnection.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/binary_pack.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/json.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/raw.dart';
+import 'package:windmillcode_peerdart/media_connection.dart';
+import 'package:windmillcode_peerdart/option_interfaces.dart';
+import 'package:windmillcode_peerdart/peer_error.dart';
+import 'package:windmillcode_peerdart/util.dart';
+import 'package:windmillcode_peerdart/logger.dart';
+import 'package:windmillcode_peerdart/socket.dart';
+import 'package:windmillcode_peerdart/data_connection/data_connection.dart';
+import 'package:windmillcode_peerdart/enums.dart';
+import 'package:windmillcode_peerdart/servermessage.dart';
+import 'package:windmillcode_peerdart/api.dart';
+import 'package:windmillcode_peerdart/utils/random_token.dart';
 
 class PeerOptions implements PeerJSOption {
   // LogLevel
@@ -27,11 +27,10 @@ class PeerOptions implements PeerJSOption {
   late bool? secure;
   late int? pingInterval;
   late String? referrerPolicy;
+  // "websocket" | "socketio"
+  String clientType;
   late void Function(LogLevel logLevel, dynamic args)? logFunction;
-  late Map<
-      String,
-      DataConnection Function(
-          String peerId, Peer provider, dynamic options)> serializers;
+  late Map<String, DataConnection Function(String peerId, Peer provider, dynamic options)> serializers;
 
   PeerOptions({
     LogLevel? debug,
@@ -45,11 +44,8 @@ class PeerOptions implements PeerJSOption {
     this.pingInterval,
     String? referrerPolicy,
     this.logFunction,
-    Map<
-            String,
-            DataConnection Function(
-                String peerId, Peer provider, dynamic options)>?
-        serializers,
+    this.clientType = "websocket",
+    Map<String, DataConnection Function(String peerId, Peer provider, dynamic options)>? serializers,
   })  : debug = debug ?? LogLevel.Disabled,
         port = port ?? util.CLOUD_PORT,
         host = host ?? util.CLOUD_HOST,
@@ -57,14 +53,10 @@ class PeerOptions implements PeerJSOption {
         token = token ?? randomToken(),
         config = config ?? util.defaultConfig,
         referrerPolicy = referrerPolicy ?? "strict-origin-when-cross-origin",
-        serializers = serializers ??
-            <String,
-                DataConnection Function(
-                    String peerId, Peer provider, dynamic options)>{};
+        serializers = serializers ?? <String, DataConnection Function(String peerId, Peer provider, dynamic options)>{};
 }
 
-typedef DataConnectionConstructor = DataConnection Function(
-    String peerId, Peer provider, dynamic options);
+typedef DataConnectionConstructor = DataConnection Function(String peerId, Peer provider, dynamic options);
 
 class SerializerMapping {
   final Map<String, DataConnectionConstructor> _mapping;
@@ -95,10 +87,7 @@ class PeerEvents<ErrorType extends String> extends EventsWithError<ErrorType> {
 // PeerErrorType
 class Peer extends EventEmitterWithError<String, PeerEvents> {
   static const String DEFAULT_KEY = 'peerjs';
-  Map<
-      String,
-      DataConnection Function(
-          String peerId, Peer provider, dynamic options)> _serializers = {
+  Map<String, DataConnection Function(String peerId, Peer provider, dynamic options)> _serializers = {
     'raw': (String peerId, Peer provider, dynamic options) {
       return Raw(peerId, provider, options);
     },
@@ -137,17 +126,14 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
           options?.port ?? util.CLOUD_PORT,
           options?.path ?? '/',
           options?.key ?? DEFAULT_KEY,
+          clientType: options?.clientType ?? "websocket",
           pingInterval: options?.pingInterval ?? 5000,
         ) {
     _serializers = {..._serializers, ..._options.serializers};
     _options.host = _options.host == '/' ? 'localhost' : _options.host;
-    _options.path = _options.path?.startsWith('/') ?? false
-        ? _options.path
-        : '/${_options.path}';
-    _options.path = _options.path?.endsWith('/') ?? false
-        ? _options.path
-        : '${_options.path}/';
-    logger.logLevel = _options.debug  ?? LogLevel.Disabled;
+    _options.path = _options.path?.startsWith('/') ?? false ? _options.path : '/${_options.path}';
+    _options.path = _options.path?.endsWith('/') ?? false ? _options.path : '${_options.path}/';
+    logger.logLevel = _options.debug ?? LogLevel.Disabled;
     if (_options.logFunction != null) {
       logger.setLogFunction(_options.logFunction!);
     }
@@ -179,13 +165,10 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
 
     _socket.on(SocketEventType.Message.value, (Map data) {
       _handleMessage(ServerMessage(
-          type: data["type"],
-          payload: PeerConnectOption.fromJson(data["payload"] ?? {}),
-          src: data["src"]));
+          type: data["type"], payload: PeerConnectOption.fromJson(data["payload"] ?? {}), src: data["src"]));
     });
 
-    _socket.on(SocketEventType.Error.value,
-        (error) => _abort(PeerErrorType.SocketError, error));
+    _socket.on(SocketEventType.Error.value, (error) => _abort(PeerErrorType.SocketError, error));
 
     _socket.on(SocketEventType.Disconnected.value, (data) {
       if (_disconnected) return;
@@ -195,8 +178,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
 
     _socket.on(SocketEventType.Close.value, (data) {
       if (_disconnected) return;
-      _abort(
-          PeerErrorType.SocketClosed, 'Underlying socket is already closed.');
+      _abort(PeerErrorType.SocketClosed, 'Underlying socket is already closed.');
     });
   }
 
@@ -225,8 +207,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       _cleanupPeer(peerId!);
       _connections.remove(peerId);
     } else if (type == ServerMessageType.Expire.value) {
-      emitError(PeerErrorType.PeerUnavailable.value,
-          'Could not connect to peer $peerId');
+      emitError(PeerErrorType.PeerUnavailable.value, 'Could not connect to peer $peerId');
     } else if (type == ServerMessageType.Offer.value) {
       final connectionId = payload.connectionId;
       var connection = getConnection(peerId!, connectionId!);
@@ -235,7 +216,6 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
         connection.close();
         logger.warn('Offer received for existing Connection ID:$connectionId');
       }
-
 
       if (payload.type == ConnectionType.Media.value) {
         final mediaConnection = MediaConnection(
@@ -276,8 +256,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       }
     } else {
       if (payload == null) {
-        logger.warn(
-            'You received a malformed message from $peerId of type $type');
+        logger.warn('You received a malformed message from $peerId of type $type');
         return;
       }
 
@@ -315,31 +294,26 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
     if (_disconnected) {
       logger.warn(
           'You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect.');
-      emitError(PeerErrorType.Disconnected.value,
-          'Cannot connect to new Peer after disconnecting from server.');
+      emitError(PeerErrorType.Disconnected.value, 'Cannot connect to new Peer after disconnecting from server.');
       return null;
     }
 
-    final dataConnection =
-        _serializers[options.serialization ?? 'default']!(peer, this, options);
+    final dataConnection = _serializers[options.serialization ?? 'default']!(peer, this, options);
     _addConnection(peer, dataConnection);
     return dataConnection;
   }
 
-  MediaConnection? call(String peer, MediaStream? stream,
-      [CallOption? options]) {
+  MediaConnection? call(String peer, MediaStream? stream, [CallOption? options]) {
     options ??= CallOption();
     if (_disconnected) {
       logger.warn(
           'You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect.');
-      emitError(PeerErrorType.Disconnected.value,
-          'Cannot connect to new Peer after disconnecting from server.');
+      emitError(PeerErrorType.Disconnected.value, 'Cannot connect to new Peer after disconnecting from server.');
       return null;
     }
 
     if (stream == null) {
-      logger.error(
-          "To call a peer, you must provide a stream from your browser's `getUserMedia`.");
+      logger.error("To call a peer, you must provide a stream from your browser's `getUserMedia`.");
       return null;
     }
 
@@ -353,8 +327,7 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
   }
 
   void _addConnection(String peerId, BaseConnection connection) {
-    logger.log(
-        'add connection ${connection.type}:${connection.connectionId} to peerId:$peerId');
+    logger.log('add connection ${connection.type}:${connection.connectionId} to peerId:$peerId');
 
     if (!_connections.containsKey(peerId)) {
       _connections[peerId] = [];
@@ -446,21 +419,15 @@ class Peer extends EventEmitterWithError<String, PeerEvents> {
       _disconnected = false;
       await _initialize(_lastServerId!);
     } else if (_destroyed) {
-      throw Exception(
-          'This peer cannot reconnect to the server. It has already been destroyed.');
+      throw Exception('This peer cannot reconnect to the server. It has already been destroyed.');
     } else if (!_disconnected && !_open) {
-      logger.error(
-          'In a hurry? We\'re still trying to make the initial connection!');
+      logger.error('In a hurry? We\'re still trying to make the initial connection!');
     } else {
-      throw Exception(
-          'Peer $id cannot reconnect because it is not disconnected from the server!');
+      throw Exception('Peer $id cannot reconnect because it is not disconnected from the server!');
     }
   }
 
   void listAllPeers(Function(List<dynamic>) cb) {
-    _api
-        .listAllPeers()
-        .then((peers) => cb(peers))
-        .catchError((error) => _abort(PeerErrorType.ServerError, error));
+    _api.listAllPeers().then((peers) => cb(peers)).catchError((error) => _abort(PeerErrorType.ServerError, error));
   }
 }

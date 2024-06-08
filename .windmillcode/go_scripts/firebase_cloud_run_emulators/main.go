@@ -11,6 +11,7 @@ func main() {
 	shared.CDToWorkspaceRoot()
 	utils.CDToFirebaseApp()
 
+	shared.SetJavaEnvironment()
 	packageManager := shared.ChooseNodePackageManager()
 	// cliInfo := utils.ShowMenuModel{
 	// 	Prompt: "Debug Mode",

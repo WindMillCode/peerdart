@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:peerdart/version.dart';
+import 'package:windmillcode_peerdart/version.dart';
 
 import 'util.dart';
 import 'logger.dart';

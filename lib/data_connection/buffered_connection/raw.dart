@@ -1,7 +1,7 @@
 // FileName: raw.dart
 
-import 'package:peerdart/data_connection/buffered_connection/buffered_connection.dart';
-import 'package:peerdart/enums.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/buffered_connection.dart';
+import 'package:windmillcode_peerdart/enums.dart';
 
 class Raw extends BufferedConnection {
   @override
@@ -13,7 +13,7 @@ class Raw extends BufferedConnection {
     super.emit('data', data);
   }
 
-  Future<void> privateSend(dynamic data, bool chunked)async {
+  Future<void> privateSend(dynamic data, bool chunked) async {
     bufferedSend(data);
   }
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/logger.dart';
-import 'package:peerdart/peer.dart';
-import 'package:peerdart/data_connection/data_connection.dart';
+import 'package:windmillcode_peerdart/logger.dart';
+import 'package:windmillcode_peerdart/peer.dart';
+import 'package:windmillcode_peerdart/data_connection/data_connection.dart';
 
 abstract class StreamConnection extends DataConnection {
   final int chunkSize = 1024 * 8 * 4;
@@ -45,8 +45,7 @@ abstract class StreamConnection extends DataConnection {
       if (!completer.isCompleted) completer.complete();
     };
 
-    if ((dataChannel?.bufferedAmount ?? 0) >
-        DataConnection.maxBufferedAmount - chunk.length) {
+    if ((dataChannel?.bufferedAmount ?? 0) > DataConnection.maxBufferedAmount - chunk.length) {
       await completer.future;
     }
 
@@ -71,8 +70,7 @@ abstract class StreamConnection extends DataConnection {
   Future<void> initializeDataChannel(RTCDataChannel dc) async {
     super.initializeDataChannel(dc);
     dataChannel = dc;
-    dataChannel?.bufferedAmountLowThreshold =
-        DataConnection.maxBufferedAmount ~/ 2;
+    dataChannel?.bufferedAmountLowThreshold = DataConnection.maxBufferedAmount ~/ 2;
     dataChannel?.onMessage = _handleMessage;
   }
 

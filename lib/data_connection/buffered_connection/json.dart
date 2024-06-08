@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:peerdart/data_connection/buffered_connection/buffered_connection.dart';
-import 'package:peerdart/enums.dart';
-import 'package:peerdart/util.dart';
-import 'package:peerdart/utils/nodejs_adaptations.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/buffered_connection.dart';
+import 'package:windmillcode_peerdart/enums.dart';
+import 'package:windmillcode_peerdart/util.dart';
+import 'package:windmillcode_peerdart/utils/nodejs_adaptations.dart';
 
 class Json extends BufferedConnection {
   @override

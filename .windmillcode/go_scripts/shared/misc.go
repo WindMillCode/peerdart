@@ -266,9 +266,51 @@ func SetNodeJSEnvironment(myDefault string){
 	if err == nil{
 		utils.RunCommand("nvm",[]string{"use",nodeJSVersion})
 	} else{
-		fmt.Println("nvm seems not to be install in your system please install or set manually")
+		fmt.Println("nvm seems not to be installed in your system please install or set manually")
 	}
 }
+
+func SetJavaEnvironment(){
+
+	_, err := exec.LookPath("jvms")
+	if err == nil{
+
+	} else{
+		fmt.Println("jvms seems not to be installed in your system please install or set manually")
+		return;
+	}
+	output, _ := utils.RunCommandWithOptions(utils.CommandOptions{
+		Command:   "jvms",
+		Args:      []string{"ls"},
+		GetOutput: true,
+	})
+	// Split the output into lines
+	lines := strings.Split(output, "\n")
+	var jdks []string
+
+	// Iterate over the lines and extract JDK names
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if len(trimmedLine) > 0 && !strings.HasPrefix(trimmedLine, "Installed jdk") {
+			// Remove the leading index and asterisk if present
+			parts := strings.Split(trimmedLine, ")")
+			if len(parts) > 1 {
+				jdk := strings.TrimSpace(parts[1])
+				// Remove the leading asterisk if present
+				jdk = strings.TrimPrefix(jdk, "*")
+				jdks = append(jdks, strings.TrimSpace(jdk))
+			}
+		}
+	}
+	cliInfo := utils.ShowMenuModel{
+		Prompt: "select the java version to use",
+		Choices:jdks,
+	}
+	javaVersion := utils.ShowMenu(cliInfo,nil)
+	utils.RunElevatedCommand("jvms",[]string{"switch",javaVersion})
+
+}
+
 
 func GetGoExecutable() string {
 	cliInfo := utils.ShowMenuModel{

@@ -2,6 +2,37 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "android: replace all emulators",
+      "type": "shell",
+      "windows": {
+        "command": "cd .windmillcode\\go_scripts\\android_replace_all_emulators ; .\\main.exe"
+      },
+      "linux": {
+        "command": "cd .windmillcode//go_scripts//android_replace_all_emulators ; .//main",
+        "options": {
+          "shell": {
+            "executable": "bash",
+            "args": [
+              "-ic"
+            ]
+          }
+        }
+      },
+      "osx": {
+        "command": "cd .windmillcode//go_scripts//android_replace_all_emulators ; .//main"
+      },
+      "runOptions": {
+        "runOn": "",
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "panel": ""
+      },
+      "metadata": {
+        "name": "windmillcode"
+      }
+    },
+    {
       "label": "angular frontend: analyze",
       "type": "shell",
       "windows": {

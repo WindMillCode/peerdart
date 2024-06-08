@@ -24,6 +24,10 @@ enum LogLevel {
    * Prints all logs.
    */
   All,
+  /**
+   * prints data Chunks
+   */
+  DataChunk
 }
 
 class Logger {
@@ -33,6 +37,12 @@ class Logger {
 
   set logLevel(LogLevel logLevel) {
     _logLevel = logLevel;
+  }
+
+  void chunk(dynamic args) {
+    if (_logLevel.index >= LogLevel.DataChunk.index) {
+      _print(LogLevel.DataChunk, args);
+    }
   }
 
   void log(dynamic args) {
@@ -69,7 +79,7 @@ class Logger {
     }
 
     if (logLevel.index >= LogLevel.All.index) {
-      print(copy.join(' '));
+      print("$LOG_PREFIX ${copy.join(' ')}");
     } else if (logLevel.index >= LogLevel.Warnings.index) {
       print("$LOG_PREFIX WARNING ${copy.join(' ')}");
     } else if (logLevel.index >= LogLevel.Errors.index) {

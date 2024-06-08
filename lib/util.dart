@@ -1,8 +1,7 @@
 import 'dart:typed_data';
-import 'package:peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
+import 'package:windmillcode_peerdart/data_connection/buffered_connection/binary_pack_chunker.dart';
 import 'supports.dart';
-import 'package:peerdart/peerdart-dart-binarypack/binarypack.dart'
-    as BinaryPack;
+import 'package:windmillcode_peerdart/peerdart-dart-binarypack/binarypack.dart' as BinaryPack;
 
 class Util extends BinaryPackChunker {
   void noop() {}

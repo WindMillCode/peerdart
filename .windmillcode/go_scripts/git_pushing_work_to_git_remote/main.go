@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"main/shared"
 
@@ -11,14 +12,31 @@ import (
 func main() {
 
 	shared.CDToWorkspaceRoot()
+	workspaceRoot, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	settings, err := utils.GetSettingsJSON(workspaceRoot)
+	if err != nil {
+		settings = utils.VSCodeSettings{}
+	}
+	choicePaths := append(settings.ExtensionPack.GitPushingWorkToGitRemote.RelativePaths,settings.ExtensionPack.GitPushingWorkToGitRemote.AbsolutePaths...)
+	normalizedChoicePaths := []string{}
+	for _, path := range choicePaths {
+		normalizedChoicePaths = append(normalizedChoicePaths, utils.ConvertPathToOSFormat(path))
+
+	}
+	if(len(normalizedChoicePaths)==0){
+		normalizedChoicePaths = []string{
+				utils.JoinAndConvertPathToOSFormat("."),
+				utils.JoinAndConvertPathToOSFormat(".", "apps", "frontend", "AngularApp"),
+				utils.JoinAndConvertPathToOSFormat(".", "apps", "backend", "RailsApp"),
+				utils.JoinAndConvertPathToOSFormat(".", "apps", "backend", "FlaskApp"),
+			}
+	}
 	cliInfo := utils.ShowMenuModel{
 		Prompt: "choose a location to push to git remote",
-		Choices: []string{
-			utils.JoinAndConvertPathToOSFormat("."),
-			utils.JoinAndConvertPathToOSFormat(".", "apps", "frontend", "AngularApp"),
-			utils.JoinAndConvertPathToOSFormat(".", "apps", "backend", "RailsApp"),
-			utils.JoinAndConvertPathToOSFormat(".", "apps", "backend", "FlaskApp"),
-		},
+		Choices:normalizedChoicePaths,
 	}
 	repoLocation := utils.ShowMenu(cliInfo, nil)
 	cliInfo = utils.ShowMenuModel{
