@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:windmillcode_peerdart/data_connection/buffered_connection/buffered_connection.dart';
@@ -52,7 +53,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
   }
 
   void _handleChunk(Map<dynamic, dynamic> data) {
-    logger.chunk("chunk data ${data.toString()}");
+    logger.chunk("chunk data received ${data.toString()}");
     final id = data['__peerData'];
     final totalChunks = data['total'];
     final chunkNumber = data['n'];
@@ -74,28 +75,35 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     // Check if all chunks are received
     if (_chunkedData[id]!.total == _chunkedData[id]!.count) {
       // Concatenate all chunks to reconstruct the file
-      var chunkedDataMap = _chunkedData;
-      var targetChunkData = _chunkedData[id];
-      final completeData = concatArrayBuffers(_chunkedData[id]!.data);
+      dynamic chunkedDataMap = _chunkedData;
+      var targetChunkData = chunkedDataMap[id];
+      final completeData = concatArrayBuffers(targetChunkData!.data);
 
       // Clean up before making the recursive call to handleDataMessage
       _chunkedData.remove(id);
 
       // Handle the complete data
       handleDataMessage(RTCDataChannelMessage.fromBinary(completeData));
+      targetChunkData = null;
+      chunkedDataMap = null;
     }
   }
 
   @override
   Future<void> privateSend(dynamic data, bool chunked) async {
-    final blob = pack(data);
-
-    if (!chunked && blob.lengthInBytes > chunker.chunkedMTU) {
-      await _sendChunks(Uint8List.view(blob));
-      return;
+    try {
+      ByteBuffer? blob = pack(data);
+      if (!chunked && blob.lengthInBytes > chunker.chunkedMTU) {
+        await _sendChunks(Uint8List.view(blob));
+        return;
+      }
+      bufferedSend(Uint8List.view(blob));
+      blob = null;
+    } on OutOfMemoryError catch (err,stack) {
+      Timer(Duration(seconds: 2), () {
+        privateSend(data, chunked);
+      });
     }
-
-    bufferedSend(Uint8List.view(blob));
   }
 
   Future<void> _sendChunks(Uint8List blob) async {
@@ -104,7 +112,7 @@ class BinaryPack<ErrorType> extends BufferedConnection<ErrorType> {
     logger.chunk('DC#$connectionId Try to send ${chunks.length} chunks...');
 
     for (final chunk in chunks) {
-      logger.chunk('chunk data ${chunk.toString()}');
+      logger.chunk('chunk data to send ${chunk.toString()}');
       await send(chunk, chunked: true);
     }
   }

@@ -45,7 +45,7 @@ abstract class StreamConnection extends DataConnection {
       if (!completer.isCompleted) completer.complete();
     };
 
-    if ((dataChannel?.bufferedAmount ?? 0) > DataConnection.maxBufferedAmount - chunk.length) {
+    if ((dataChannel?.bufferedAmount ?? 0) > DataConnection.MAX_BUFFERED_AMOUNT - chunk.length) {
       await completer.future;
     }
 
@@ -70,7 +70,7 @@ abstract class StreamConnection extends DataConnection {
   Future<void> initializeDataChannel(RTCDataChannel dc) async {
     super.initializeDataChannel(dc);
     dataChannel = dc;
-    dataChannel?.bufferedAmountLowThreshold = DataConnection.maxBufferedAmount ~/ 2;
+    dataChannel?.bufferedAmountLowThreshold = DataConnection.MAX_BUFFERED_AMOUNT ~/ 2;
     dataChannel?.onMessage = _handleMessage;
   }
 

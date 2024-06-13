@@ -52,9 +52,8 @@ class Socket extends EventEmitter {
       _websocket = WebSocketChannel.connect(Uri.parse(wsUrl + "&version=$version"), protocols: ["websocket"]);
     } else {
       socketio = IO.io(
-        _baseSocketioUrl,
+        _baseSocketioUrl+"/peerjs",
         IO.OptionBuilder()
-            .setPath("/peerjs-socketio")
             .setQuery({..._baseSocketioQueryParams, 'token': token, 'version': version}).build(),
       );
     }
@@ -219,6 +218,7 @@ class Socket extends EventEmitter {
     if (clientType == 'websocket') {
       _websocket?.sink.close();
       _websocket = null;
+      _wsPingTimer.cancel();
     } else {
       socketio?.disconnect();
       socketio?.close();
@@ -226,6 +226,5 @@ class Socket extends EventEmitter {
       socketio?.destroy();
       socketio = null;
     }
-    _wsPingTimer.cancel();
   }
 }

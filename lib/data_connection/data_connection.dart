@@ -1,5 +1,6 @@
 // FileName: dataconnection.dart
 
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -23,7 +24,7 @@ abstract class DataConnectionEvents<ErrorType extends String> extends EventsWith
 
 abstract class DataConnection<ErrorType> extends BaseConnection {
   static const String idPrefix = "dc_";
-  static const int maxBufferedAmount = 8 * 1024 * 1024;
+  static int MAX_BUFFERED_AMOUNT = 8 * 1024 * 1024;
 
   Negotiator<DataConnectionEvents, DataConnection>? _negotiator;
   // SerializationType
@@ -154,6 +155,8 @@ abstract class DataConnection<ErrorType> extends BaseConnection {
           "Connection is not open. You should listen for the `open` event before sending messages.");
       return Future.value();
     }
+
+
     await privateSend(data, chunked);
   }
 

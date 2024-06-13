@@ -1,3 +1,21 @@
+# 1.5.4020 [6/12/2024 11:45:22 AM EST]
+
+[UPDATE] Added dart:async import in binary_pack.dart and data_connection.dart.
+
+[FIX] Improved logging message clarity in binary_pack.dart.
+
+[UPDATE] Modified _handleChunk method in binary_pack.dart for better variable handling.
+
+[UPDATE] privateSend method in binary_pack.dart now handles OutOfMemoryError and retries after a delay.
+
+[UPDATE] Adjusted logging in _sendChunks method in binary_pack.dart.
+
+[PATCH] BufferedConnection in buffered_connection.dart now uses a dynamic message and logs errors with stack traces.
+
+[PATCH] DataConnection maxBufferedAmount updated to MAX_BUFFERED_AMOUNT in data_connection.dart, stream_connection.dart, and buffered_connection.dart.
+
+[FIX] Socket class in socket.dart now properly cancels the _wsPingTimer when closing the WebSocket connection.
+
 # 1.5.4010 [6/8/2024 10:15:30 AM EST]
 
 [UPDATE]

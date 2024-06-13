@@ -37,7 +37,11 @@ abstract class BufferedConnection<ErrorType> extends DataConnection<ErrorType> {
       return false;
     }
 
-    if ((dataChannel?.bufferedAmount ?? 0) > DataConnection.maxBufferedAmount) {
+    // logger.chunk("Current Buffer ${dataChannel!.bufferedAmount}");
+    // logger.chunk("Max Buffer ${DataConnection.MAX_BUFFERED_AMOUNT}");
+    // logger.chunk("Percent of max ${dataChannel!.bufferedAmount! / DataConnection.MAX_BUFFERED_AMOUNT}");
+
+    if ((dataChannel?.bufferedAmount ?? 0) > (DataConnection.MAX_BUFFERED_AMOUNT * .8)) {
       _buffering = true;
       Future.delayed(const Duration(milliseconds: 50), () {
         _buffering = false;
@@ -47,10 +51,11 @@ abstract class BufferedConnection<ErrorType> extends DataConnection<ErrorType> {
     }
 
     try {
-      final message = RTCDataChannelMessage.fromBinary(msg);
+      dynamic message = RTCDataChannelMessage.fromBinary(msg);
       dataChannel?.send(message);
-    } catch (e) {
-      logger.error('DC#$connectionId Error when sending: $e');
+      message = null;
+    } catch (err, stack) {
+      logger.error('DC#$connectionId Error when sending: $err');
       _buffering = true;
       close();
       return false;
