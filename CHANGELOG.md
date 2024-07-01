@@ -49,3 +49,6 @@
 # 1.5.4001
 
 - Initial version.
+
+# 1.5.4021
+* UPDATED dependencies

@@ -1,5 +1,5 @@
 name: windmillcode_peerdart
-version: 1.5.4020
+version: 1.5.4021
 homepage: https://github.com/WindMillCode/peerdart
 description: Simple peer-to-peer with WebRTC for Dart. PeerJS port for Flutter.
 repository: https://github.com/WindMillCode/peerdart
@@ -11,12 +11,12 @@ topics:
   - peer
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
   flutter: ">=1.22.0"
 dependencies:
-  http: ^1.1.0
-  uuid: ^4.1.0
-  flutter_webrtc: ^0.10.8
+  http: ^1.2.1
+  uuid: ^4.4.0
+  flutter_webrtc: ^0.11.1
   socket_io_client: ^2.0.3+1
   events_emitter: ^0.5.2
   sdp_transform: ^0.3.2
