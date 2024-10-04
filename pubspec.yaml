@@ -14,19 +14,19 @@ environment:
   sdk: '>=3.3.0 <4.0.0'
   flutter: ">=1.22.0"
 dependencies:
-  http: ^1.2.1
+  http: ^1.2.2
   uuid: ^4.4.0
-  flutter_webrtc: ^0.11.2
-  socket_io_client: ^2.0.3+1
+  flutter_webrtc: ^0.11.7
+  socket_io_client: ^3.0.0
   events_emitter: ^0.5.2
   sdp_transform: ^0.3.2
   msgpack_dart: ^1.0.1
-  web_socket_channel: ^3.0.0
+  web_socket_channel: ^3.0.1
   json_annotation: ^4.9.0
 dev_dependencies:
-  lints: ^4.0.0
+  lints: ^5.0.0
   flutter_test:
     sdk: flutter
   json_serializable: ^6.8.0
-  build_runner: ^2.4.11
+  build_runner: ^2.4.13
   unused_import_remover: ^1.0.1
