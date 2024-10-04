@@ -52,3 +52,17 @@
 
 # 1.5.4021
 * UPDATED dependencies
+
+
+# 1.5.4030 [10/3/2024 2:22:33 PM EST]
+
+[UPDATE] updated packages to reflect the latest version of flutter
+ `http` bumped from 1.2.1 to 1.2.2 in pubspec.yaml
+ `flutter_webrtc` bumped from 0.11.2 to 0.11.7 in pubspec.yaml
+ `socket_io_client` bumped from 2.0.3+1 to 3.0.0 in pubspec.yaml
+ `web_socket_channel` bumped from 3.0.0 to 3.0.1 in pubspec.yaml
+ `lints` bumped from 4.0.0 to 5.0.0 in pubspec.yaml
+ `build_runner` bumped from 2.4.11 to 2.4.13 in pubspec.yaml
+
+[BUG] - potential andriod issue where if the andriod device is the receiver may have issues on negotiation step in the webrtc connection setup
+
