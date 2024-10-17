@@ -66,4 +66,9 @@
 
 [BUG] - potential andriod issue where if the andriod device is the receiver may have issues on negotiation step in the webrtc connection setup
 
-# 1.5.4031 
+# 1.5.4031  [10/17/2024 8:45:12 AM EST]
+
+[PATCH] - Updated `uuid` dependency in `pubspec.yaml` from `^4.4.0` to `^4.5.1`.
+[UPDATE] - Bumped `flutter_webrtc` version in `pubspec.yaml` from `^0.11.7` to `^0.12.0`.
+
+
